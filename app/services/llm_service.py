@@ -1,12 +1,20 @@
-from app.providers.llm_provider import LLMProvider
+from app.providers.llm_provider import (
+    LLMProvider
+)
 
 
 class LLMService:
 
-    def __init__(self, provider: LLMProvider):
+    def __init__(
+        self,
+        provider: LLMProvider
+    ):
 
         self.provider = provider
 
-    def generate(self, prompt: str) -> str:
+    def generate(
+        self,
+        prompt: str
+    ) -> str:
 
         return self.provider.generate(prompt)

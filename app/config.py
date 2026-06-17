@@ -6,15 +6,21 @@ load_dotenv()
 
 class Settings:
 
-    MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "openai")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-    MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
+    MODEL_PROVIDER = os.getenv(
+        "MODEL_PROVIDER",
+        "openai"
+    )
 
-    TEMPERATURE = float(os.getenv("TEMPERATURE", 0.2))
+    MODEL_NAME = os.getenv(
+        "MODEL_NAME",
+        "gpt-4o-mini"
+    )
 
-    TOP_K = int(os.getenv("TOP_K", 20))
-
-    TOP_N = int(os.getenv("TOP_N", 5))
+    TEMPERATURE = float(
+        os.getenv("TEMPERATURE", 0.2)
+    )
 
 
 settings = Settings()

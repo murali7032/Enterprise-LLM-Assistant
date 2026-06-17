@@ -1,8 +1,17 @@
-from app.providers.llm_provider import LLMProvider
+from app.providers.llm_provider import (
+    LLMProvider
+)
 
 
-class OpenAIProvider(LLMProvider):
+class OpenAIProvider(
+    LLMProvider
+):
 
-    def generate(self, prompt: str) -> str:
+    def generate(
+        self,
+        prompt: str
+    ) -> str:
 
-        return f"Dummy OpenAI Response: {prompt}"
+        return (
+            f"Dummy OpenAI Response : {prompt}"
+        )
