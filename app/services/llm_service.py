@@ -1,6 +1,6 @@
-from app.providers.llm_provider import (
-    LLMProvider
-)
+from app.core.logging import logger
+
+from app.providers.llm_provider import LLMProvider
 
 
 class LLMService:
@@ -17,4 +17,10 @@ class LLMService:
         prompt: str
     ) -> str:
 
-        return self.provider.generate(prompt)
+        logger.info(
+            "Generating LLM response"
+        )
+
+        return self.provider.generate(
+            prompt
+        )
