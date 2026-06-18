@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enterprise-llm-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: enterprise-llm-platform
+  template:
+    metadata:
+      labels:
+        app: enterprise-llm-platform
+    spec:
+      containers:
+        - name: api
+          image: enterprise-llm-platform:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: enterprise-llm-platform-config
+            - secretRef:
+                name: enterprise-llm-platform-secrets
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: enterprise-llm-platform
+spec:
+  selector:
+    app: enterprise-llm-platform
+  ports:
+    - port: 80
+      targetPort: 8000
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: enterprise-llm-platform-config
+data:
+  LLM_PROVIDER: openai
+  MODEL_NAME: gpt-4o-mini
+  REDIS_URL: redis://redis:6379/0
+  QDRANT_URL: http://qdrant:6333
+  DATABASE_URL: postgresql://postgres:postgres@postgres:5432/llm_platform
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: enterprise-llm-platform-secrets
+type: Opaque
+stringData:
+  OPENAI_API_KEY: replace-me
+  JWT_SECRET_KEY: replace-me
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: enterprise-llm-platform
+spec:
+  rules:
+    - host: llm.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: enterprise-llm-platform
+                port:
+                  number: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: enterprise-llm-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: enterprise-llm-platform
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
