@@ -1,8 +1,14 @@
 from fastapi import APIRouter, Depends, File, UploadFile
 
-from app.dependencies import get_ingestion_service
+from app.dependencies import get_document_service, get_ingestion_service
 from app.middleware.auth import require_auth_permission
-from app.models.document import DocumentIngestRequest, DocumentSearchRequest
+from app.models.document import (
+    DocumentDeleteResponse,
+    DocumentIngestRequest,
+    DocumentSearchRequest,
+    DocumentSearchResponse,
+)
+from app.services.document_service import DocumentService
 from app.services.ingestion_service import IngestionService
 
 router = APIRouter(prefix="/api/v1/documents", tags=["Documents"])
@@ -26,15 +32,22 @@ async def ingest_document(
     )
 
 
-@router.post("/search")
+@router.post("/search", response_model=DocumentSearchResponse)
 async def search_documents(
     request: DocumentSearchRequest,
+    document_service: DocumentService = Depends(get_document_service),
     _user: dict = Depends(require_auth_permission("documents")),
-) -> dict:
-    """Document search endpoint placeholder for repository-backed search."""
-    return {
-        "query": request.query,
-        "collection": request.collection,
-        "top_k": request.top_k,
-        "message": "Use chat with use_rag=true for retrieval-augmented answers.",
-    }
+) -> DocumentSearchResponse:
+    """Search document chunks in the vector store."""
+    return await document_service.search(request)
+
+
+@router.delete("/{document_id}", response_model=DocumentDeleteResponse)
+async def delete_document(
+    document_id: str,
+    collection: str = "documents",
+    document_service: DocumentService = Depends(get_document_service),
+    _user: dict = Depends(require_auth_permission("documents")),
+) -> DocumentDeleteResponse:
+    """Delete a document and all its vector chunks from the collection."""
+    return await document_service.delete(document_id=document_id, collection=collection)

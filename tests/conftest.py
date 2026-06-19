@@ -34,7 +34,7 @@ def client() -> TestClient:
     output_parser=OutputParser(),
     guardrails=PromptGuardrails(),
     retriever=None,
-    openai_client=None,
+    embedding_client=None,
   )
   app.dependency_overrides[get_llm_provider] = lambda: fake_provider
   app.dependency_overrides[get_llm_service] = lambda: llm_service

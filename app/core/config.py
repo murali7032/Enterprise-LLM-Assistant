@@ -26,13 +26,14 @@ class Settings(BaseSettings):
 
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_COLLECTION: str = "documents"
+    EMBEDDING_PROVIDER: str = ""
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSION: int = 1536
 
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/llm_platform"
 
-    CHUNK_SIZE: int = 1000
-    CHUNK_OVERLAP: int = 200
+    CHUNK_SIZE: int = 100
+    CHUNK_OVERLAP: int = 10
     TOP_K: int = 5
     TOP_N: int = 3
 
@@ -50,6 +51,10 @@ class Settings(BaseSettings):
 
     LOG_LEVEL: str = "INFO"
     METRICS_ENABLED: bool = True
+
+    MEMORY_ENABLED: bool = True
+    MEMORY_MAX_MESSAGES: int = 10
+    MEMORY_MAX_CHARS: int = 8000
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

@@ -34,3 +34,7 @@ class DocumentRepository:
         if collection:
             return [doc for doc in documents if doc["collection"] == collection]
         return documents
+
+    async def delete_document(self, document_id: str) -> bool:
+        """Remove document metadata by ID."""
+        return self._documents.pop(document_id, None) is not None

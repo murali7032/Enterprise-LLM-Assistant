@@ -26,3 +26,21 @@ class DocumentChunk(BaseModel):
     content: str
     score: float
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class DocumentSearchResponse(BaseModel):
+    """Response from a document search."""
+
+    query: str
+    collection: str
+    results: list[DocumentChunk] = Field(default_factory=list)
+    total: int = 0
+
+
+class DocumentDeleteResponse(BaseModel):
+    """Response from a document delete."""
+
+    document_id: str
+    collection: str
+    chunks_deleted: int
+    message: str

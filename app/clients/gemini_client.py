@@ -57,3 +57,18 @@ class GeminiClient:
         async for chunk in response:
             if chunk.text:
                 yield chunk.text
+
+    async def embed(self, texts: list[str], model: str) -> list[list[float]]:
+        """Create embeddings for a list of texts."""
+        import asyncio
+
+        async def _embed_one(text: str) -> list[float]:
+            result = await asyncio.to_thread(
+                genai.embed_content,
+                model=model,
+                content=text,
+                task_type="retrieval_document",
+            )
+            return result["embedding"]
+
+        return await asyncio.gather(*[_embed_one(text) for text in texts])

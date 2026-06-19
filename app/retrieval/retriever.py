@@ -67,13 +67,15 @@ class Retriever:
         query_text: str,
         collection: str,
         top_k: int | None = None,
+        top_n: int | None = None,
         metadata_filter: dict[str, Any] | None = None,
     ) -> list[DocumentChunk]:
         """Retrieve and rerank document chunks."""
+        limit_k = top_k or settings.TOP_K
         hits = await self._qdrant_client.search(
             collection=collection,
             query_vector=query_vector,
-            top_k=top_k or settings.TOP_K,
+            top_k=limit_k,
             metadata_filter=metadata_filter,
         )
-        return self._reranker.rerank(query_text, hits)
+        return self._reranker.rerank(query_text, hits, top_n=top_n or limit_k)

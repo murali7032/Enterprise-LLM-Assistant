@@ -22,15 +22,15 @@ async def test_chat_service_rag_path() -> None:
   retriever.retrieve = AsyncMock(
     return_value=[DocumentChunk(id="1", content="k8s docs", score=0.9, metadata={})]
   )
-  openai_client = MagicMock()
-  openai_client.embed = AsyncMock(return_value=[[0.1, 0.2]])
+  embedding_client = MagicMock()
+  embedding_client.embed = AsyncMock(return_value=[[0.1, 0.2]])
   service = ChatService(
     llm_service=LLMService(provider=FakeProvider(), cache=None),
     prompt_builder=PromptBuilder(),
     output_parser=OutputParser(),
     guardrails=PromptGuardrails(),
     retriever=retriever,
-    openai_client=openai_client,
+    embedding_client=embedding_client,
   )
   response = await service.chat(ChatRequest(question="search kubernetes docs", use_rag=True))
   assert response.sources

@@ -12,6 +12,7 @@ from app.clients.ollama_client import OllamaClient
 from app.clients.openai_client import OpenAIClient
 from app.clients.qdrant_client import QdrantClientWrapper
 from app.clients.redis_client import RedisClient
+from app.clients.embedding_client import create_embedding_client
 from app.core.config import settings
 from app.core.exceptions import LLMProviderException
 from app.memory.conversation_memory import ConversationMemory
@@ -28,6 +29,7 @@ from app.repositories.document_repository import DocumentRepository
 from app.retrieval.retriever import HybridSearch, Reranker, Retriever
 from app.security.guardrails import PromptGuardrails
 from app.services.chat_service import ChatService
+from app.services.document_service import DocumentService
 from app.services.ingestion_service import IngestionService
 from app.services.llm_service import LLMService
 from app.tools.kubernetes_tool import KubernetesTool
@@ -129,6 +131,13 @@ def get_conversation_memory() -> ConversationMemory:
     return ConversationMemory()
 
 
+def get_embedding_client():
+    return create_embedding_client(
+        openai_client=get_openai_client(),
+        gemini_client=get_gemini_client(),
+    )
+
+
 def get_chat_service() -> ChatService:
     return ChatService(
         llm_service=get_llm_service(),
@@ -136,14 +145,23 @@ def get_chat_service() -> ChatService:
         output_parser=get_output_parser(),
         guardrails=get_guardrails(),
         retriever=get_retriever(),
-        openai_client=get_openai_client(),
+        embedding_client=get_embedding_client(),
         memory=get_conversation_memory(),
     )
 
 
 def get_ingestion_service() -> IngestionService:
     return IngestionService(
-        openai_client=get_openai_client(),
+        embedding_client=get_embedding_client(),
+        qdrant_client=get_qdrant_client(),
+        document_repository=get_document_repository(),
+    )
+
+
+def get_document_service() -> DocumentService:
+    return DocumentService(
+        embedding_client=get_embedding_client(),
+        retriever=get_retriever(),
         qdrant_client=get_qdrant_client(),
         document_repository=get_document_repository(),
     )

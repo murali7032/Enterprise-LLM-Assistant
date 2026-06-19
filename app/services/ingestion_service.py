@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from pypdf import PdfReader
 
-from app.clients.openai_client import OpenAIClient
+from app.clients.embedding_client import EmbeddingClient
 from app.clients.qdrant_client import QdrantClientWrapper
 from app.core.config import settings
 from app.repositories.document_repository import DocumentRepository
@@ -38,12 +38,12 @@ class IngestionService:
 
     def __init__(
         self,
-        openai_client: OpenAIClient,
+        embedding_client: EmbeddingClient,
         qdrant_client: QdrantClientWrapper,
         document_repository: DocumentRepository,
         splitter: RecursiveTextSplitter | None = None,
     ) -> None:
-        self._openai_client = openai_client
+        self._embedding_client = embedding_client
         self._qdrant_client = qdrant_client
         self._document_repository = document_repository
         self._splitter = splitter or RecursiveTextSplitter()
@@ -62,7 +62,7 @@ class IngestionService:
         if not chunks:
             return {"document_id": None, "chunks_indexed": 0}
 
-        embeddings = await self._openai_client.embed(chunks, model=settings.EMBEDDING_MODEL)
+        embeddings = await self._embedding_client.embed(chunks)
         await self._qdrant_client.ensure_collection(collection, settings.EMBEDDING_DIMENSION)
 
         document_id = str(uuid4())

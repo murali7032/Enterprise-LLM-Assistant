@@ -74,3 +74,31 @@ class QdrantClientWrapper:
             }
             for hit in results
         ]
+
+    async def delete_by_document_id(self, collection: str, document_id: str) -> int:
+        """Delete all vectors belonging to a document."""
+        document_filter = qmodels.Filter(
+            must=[qmodels.FieldCondition(key="document_id", match=qmodels.MatchValue(value=document_id))]
+        )
+        point_ids: list[str | int] = []
+        offset = None
+        while True:
+            records, offset = await self._client.scroll(
+                collection_name=collection,
+                scroll_filter=document_filter,
+                limit=100,
+                offset=offset,
+                with_payload=False,
+            )
+            point_ids.extend(record.id for record in records)
+            if offset is None:
+                break
+
+        if not point_ids:
+            return 0
+
+        await self._client.delete(
+            collection_name=collection,
+            points_selector=qmodels.PointIdsList(points=point_ids),
+        )
+        return len(point_ids)
