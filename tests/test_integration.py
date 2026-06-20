@@ -7,6 +7,7 @@ from app.dependencies import get_qdrant_client, get_redis_client
 from app.main import app
 from app.models.chat_request import ChatRequest
 from app.models.document import DocumentChunk
+from app.memory.conversation_memory import InMemoryConversationMemory
 from app.parser.output_parser import OutputParser
 from app.prompt.prompt_builder import PromptBuilder
 from app.security.guardrails import PromptGuardrails
@@ -31,6 +32,7 @@ async def test_chat_service_rag_path() -> None:
     guardrails=PromptGuardrails(),
     retriever=retriever,
     embedding_client=embedding_client,
+    memory=InMemoryConversationMemory(),
   )
   response = await service.chat(ChatRequest(question="search kubernetes docs", use_rag=True))
   assert response.sources
@@ -65,6 +67,7 @@ async def test_chat_service_stream() -> None:
     prompt_builder=PromptBuilder(),
     output_parser=OutputParser(),
     guardrails=PromptGuardrails(),
+    memory=InMemoryConversationMemory(),
   )
   chunks = []
   async for chunk in service.stream(ChatRequest(question="hello")):

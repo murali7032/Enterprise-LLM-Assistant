@@ -1,12 +1,11 @@
+from abc import ABC, abstractmethod
 from typing import Any
 
 
-class DocumentRepository:
-    """In-memory document metadata repository."""
+class DocumentRepository(ABC):
+    """Document metadata persistence interface."""
 
-    def __init__(self) -> None:
-        self._documents: dict[str, dict[str, Any]] = {}
-
+    @abstractmethod
     async def save_document(
         self,
         document_id: str,
@@ -16,25 +15,32 @@ class DocumentRepository:
         metadata: dict[str, Any],
     ) -> None:
         """Persist document metadata."""
-        self._documents[document_id] = {
-            "document_id": document_id,
-            "filename": filename,
-            "collection": collection,
-            "chunk_count": chunk_count,
-            "metadata": metadata,
-        }
 
+    @abstractmethod
     async def get_document(self, document_id: str) -> dict[str, Any] | None:
         """Fetch document metadata by ID."""
-        return self._documents.get(document_id)
 
+    @abstractmethod
     async def list_documents(self, collection: str | None = None) -> list[dict[str, Any]]:
         """List stored document metadata."""
-        documents = list(self._documents.values())
-        if collection:
-            return [doc for doc in documents if doc["collection"] == collection]
-        return documents
 
+    @abstractmethod
     async def delete_document(self, document_id: str) -> bool:
         """Remove document metadata by ID."""
-        return self._documents.pop(document_id, None) is not None
+
+    @abstractmethod
+    async def list_documents_by_session(
+        self,
+        session_id: str,
+        collection: str | None = None,
+        ephemeral_only: bool = False,
+    ) -> list[dict[str, Any]]:
+        """List document metadata for a chat session."""
+
+    @abstractmethod
+    async def delete_documents_by_session(
+        self,
+        session_id: str,
+        ephemeral_only: bool = True,
+    ) -> list[str]:
+        """Delete document metadata for a session. Returns removed document IDs."""

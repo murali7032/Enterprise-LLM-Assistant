@@ -1,4 +1,8 @@
+from collections.abc import AsyncGenerator
 from functools import lru_cache
+
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.agent_service import AgentService
 from app.agents.executor import Executor
@@ -7,15 +11,18 @@ from app.agents.tool_router import ToolRouter
 from app.cache.redis_cache import RedisSemanticCache
 from app.clients.anthropic_client import AnthropicClient
 from app.clients.azure_openai_client import AzureOpenAIClient
+from app.clients.embedding_client import create_embedding_client
 from app.clients.gemini_client import GeminiClient
 from app.clients.ollama_client import OllamaClient
 from app.clients.openai_client import OpenAIClient
 from app.clients.qdrant_client import QdrantClientWrapper
 from app.clients.redis_client import RedisClient
-from app.clients.embedding_client import create_embedding_client
 from app.core.config import settings
 from app.core.exceptions import LLMProviderException
-from app.memory.conversation_memory import ConversationMemory
+from app.db.database import async_session_factory
+from app.memory.conversation_memory import InMemoryConversationMemory
+from app.memory.memory_store import ConversationMemoryStore
+from app.memory.postgres_conversation_memory import PostgresConversationMemory
 from app.parser.output_parser import OutputParser
 from app.prompt.prompt_builder import PromptBuilder
 from app.providers.anthropic_provider import AnthropicProvider
@@ -26,6 +33,8 @@ from app.providers.ollama_provider import OllamaProvider
 from app.providers.openai_provider import OpenAIProvider
 from app.providers.registry import ProviderRegistry
 from app.repositories.document_repository import DocumentRepository
+from app.repositories.in_memory_document_repository import InMemoryDocumentRepository
+from app.repositories.postgres_document_repository import PostgresDocumentRepository
 from app.retrieval.retriever import HybridSearch, Reranker, Retriever
 from app.security.guardrails import PromptGuardrails
 from app.services.chat_service import ChatService
@@ -74,8 +83,42 @@ def get_qdrant_client() -> QdrantClientWrapper:
 
 
 @lru_cache
-def get_document_repository() -> DocumentRepository:
-    return DocumentRepository()
+def get_in_memory_document_repository() -> InMemoryDocumentRepository:
+    return InMemoryDocumentRepository()
+
+
+@lru_cache
+def get_in_memory_conversation_memory() -> InMemoryConversationMemory:
+    return InMemoryConversationMemory()
+
+
+async def get_db_session() -> AsyncGenerator[AsyncSession | None, None]:
+    """Provide a PostgreSQL session per request when enabled."""
+    if not settings.USE_POSTGRES:
+        yield None
+        return
+    async with async_session_factory() as session:
+        yield session
+
+
+async def get_document_repository(
+    session: AsyncSession | None = Depends(get_db_session),
+) -> DocumentRepository:
+    """Resolve the document repository implementation."""
+    if settings.USE_POSTGRES:
+        assert session is not None
+        return PostgresDocumentRepository(session=session)
+    return get_in_memory_document_repository()
+
+
+async def get_conversation_memory(
+    session: AsyncSession | None = Depends(get_db_session),
+) -> ConversationMemoryStore:
+    """Resolve the conversation memory implementation."""
+    if settings.USE_POSTGRES:
+        assert session is not None
+        return PostgresConversationMemory(session=session)
+    return get_in_memory_conversation_memory()
 
 
 @lru_cache
@@ -126,11 +169,6 @@ def get_retriever() -> Retriever:
     )
 
 
-@lru_cache
-def get_conversation_memory() -> ConversationMemory:
-    return ConversationMemory()
-
-
 def get_embedding_client():
     return create_embedding_client(
         openai_client=get_openai_client(),
@@ -138,7 +176,9 @@ def get_embedding_client():
     )
 
 
-def get_chat_service() -> ChatService:
+def get_chat_service(
+    memory: ConversationMemoryStore = Depends(get_conversation_memory),
+) -> ChatService:
     return ChatService(
         llm_service=get_llm_service(),
         prompt_builder=get_prompt_builder(),
@@ -146,24 +186,28 @@ def get_chat_service() -> ChatService:
         guardrails=get_guardrails(),
         retriever=get_retriever(),
         embedding_client=get_embedding_client(),
-        memory=get_conversation_memory(),
+        memory=memory,
     )
 
 
-def get_ingestion_service() -> IngestionService:
+def get_ingestion_service(
+    document_repository: DocumentRepository = Depends(get_document_repository),
+) -> IngestionService:
     return IngestionService(
         embedding_client=get_embedding_client(),
         qdrant_client=get_qdrant_client(),
-        document_repository=get_document_repository(),
+        document_repository=document_repository,
     )
 
 
-def get_document_service() -> DocumentService:
+def get_document_service(
+    document_repository: DocumentRepository = Depends(get_document_repository),
+) -> DocumentService:
     return DocumentService(
         embedding_client=get_embedding_client(),
         retriever=get_retriever(),
         qdrant_client=get_qdrant_client(),
-        document_repository=get_document_repository(),
+        document_repository=document_repository,
     )
 
 

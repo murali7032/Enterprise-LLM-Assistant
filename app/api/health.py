@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends
 
 from app.clients.qdrant_client import QdrantClientWrapper
 from app.clients.redis_client import RedisClient
+from app.core.config import settings
+from app.db.database import check_db_health
 from app.dependencies import get_qdrant_client, get_redis_client
 
 router = APIRouter(tags=["Health"])
@@ -25,7 +27,9 @@ async def ready(
     qdrant_client: QdrantClientWrapper = Depends(get_qdrant_client),
 ) -> dict[str, object]:
     """Readiness probe with dependency checks."""
-    checks: dict[str, object] = {"api": True, "redis": False, "qdrant": False}
+    checks: dict[str, object] = {"api": True, "redis": False, "qdrant": False, "postgres": True}
+    if settings.USE_POSTGRES:
+        checks["postgres"] = False
     try:
         checks["redis"] = await redis_client.ping()
     except Exception:
@@ -34,5 +38,10 @@ async def ready(
         checks["qdrant"] = await qdrant_client.health()
     except Exception:
         checks["qdrant"] = False
+    if settings.USE_POSTGRES:
+        try:
+            checks["postgres"] = await check_db_health()
+        except Exception:
+            checks["postgres"] = False
     status = "READY" if all(checks.values()) else "DEGRADED"
     return {"status": status, "checks": checks}

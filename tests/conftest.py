@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from app.dependencies import get_chat_service, get_llm_provider, get_llm_service
 from app.main import app
 from app.models.llm_response import LLMResult
+from app.memory.conversation_memory import InMemoryConversationMemory
 from app.parser.output_parser import OutputParser
 from app.prompt.prompt_builder import PromptBuilder
 from app.providers.llm_provider import LLMProvider
@@ -35,6 +36,7 @@ def client() -> TestClient:
     guardrails=PromptGuardrails(),
     retriever=None,
     embedding_client=None,
+    memory=InMemoryConversationMemory(),
   )
   app.dependency_overrides[get_llm_provider] = lambda: fake_provider
   app.dependency_overrides[get_llm_service] = lambda: llm_service

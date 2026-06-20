@@ -1,3 +1,5 @@
+from typing import Any
+
 from app.clients.embedding_client import EmbeddingClient
 from app.clients.qdrant_client import QdrantClientWrapper
 from app.core.exceptions import AppException
@@ -55,3 +57,23 @@ class DocumentService:
             chunks_deleted=chunks_deleted,
             message="Document deleted successfully",
         )
+
+    async def delete_session_documents(
+        self,
+        session_id: str,
+        collection: str,
+        ephemeral_only: bool = True,
+    ) -> dict[str, Any]:
+        """Delete all documents (and vector chunks) for a chat session."""
+        document_ids = await self._document_repository.delete_documents_by_session(
+            session_id=session_id,
+            ephemeral_only=ephemeral_only,
+        )
+        chunks_deleted = await self._qdrant_client.delete_by_session_id(collection, session_id)
+        return {
+            "session_id": session_id,
+            "collection": collection,
+            "documents_deleted": len(document_ids),
+            "chunks_deleted": chunks_deleted,
+            "document_ids": document_ids,
+        }

@@ -52,7 +52,10 @@ class LLMService:
                 cached = None
             if cached:
                 metrics.CACHE_HITS.labels(namespace="llm").inc()
-                return LLMResult.model_validate(cached)
+                result = LLMResult.model_validate(cached)
+                result.cached = True
+                result.cost_usd = 0.0
+                return result
             metrics.CACHE_MISSES.labels(namespace="llm").inc()
 
         start = time.perf_counter()

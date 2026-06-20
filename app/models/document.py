@@ -10,6 +10,26 @@ class DocumentIngestRequest(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class DocumentUrlIngestRequest(BaseModel):
+    """Request to ingest content from a URL (e.g. YouTube)."""
+
+    url: str = Field(..., min_length=8)
+    collection: str = Field(default="documents", min_length=1)
+    session_id: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class DocumentIngestResponse(BaseModel):
+    """Response from document ingestion."""
+
+    document_id: str
+    filename: str
+    chunks_indexed: int
+    source_type: str
+    collection: str
+    message: str = "Document ingested successfully"
+
+
 class DocumentSearchRequest(BaseModel):
     """Request to search documents."""
 
@@ -44,3 +64,14 @@ class DocumentDeleteResponse(BaseModel):
     collection: str
     chunks_deleted: int
     message: str
+
+
+class SessionDocumentsDeleteResponse(BaseModel):
+    """Response from deleting all ephemeral documents for a chat session."""
+
+    session_id: str
+    collection: str
+    documents_deleted: int
+    chunks_deleted: int
+    document_ids: list[str] = Field(default_factory=list)
+    message: str = "Session documents deleted successfully"

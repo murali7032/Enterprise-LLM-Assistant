@@ -1,7 +1,7 @@
 import pytest
 
-from app.memory.conversation_memory import ConversationMemory
-from app.repositories.document_repository import DocumentRepository
+from app.memory.conversation_memory import InMemoryConversationMemory
+from app.repositories.in_memory_document_repository import InMemoryDocumentRepository
 from app.retrieval.retriever import HybridSearch, Reranker
 from app.services.ingestion_service import RecursiveTextSplitter
 from app.tools.shell_tool import ShellTool
@@ -16,7 +16,7 @@ def test_recursive_splitter() -> None:
 
 @pytest.mark.asyncio
 async def test_document_repository() -> None:
-  repo = DocumentRepository()
+  repo = InMemoryDocumentRepository()
   await repo.save_document("1", "file.pdf", "documents", 3, {"tag": "a"})
   doc = await repo.get_document("1")
   assert doc is not None
@@ -59,8 +59,9 @@ async def test_sql_tool() -> None:
   assert result["row_count"] == 1
 
 
-def test_conversation_memory() -> None:
-  memory = ConversationMemory()
-  memory.append("s1", "user", "hello")
-  memory.append("s1", "assistant", "hi")
-  assert len(memory.get_history("s1")) == 2
+@pytest.mark.asyncio
+async def test_conversation_memory() -> None:
+  memory = InMemoryConversationMemory()
+  await memory.append("s1", "user", "hello")
+  await memory.append("s1", "assistant", "hi")
+  assert len(await memory.get_history("s1")) == 2

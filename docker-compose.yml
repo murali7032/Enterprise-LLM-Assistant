@@ -5,6 +5,9 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/llm_platform
+      USE_POSTGRES: "true"
     depends_on:
       - redis
       - qdrant

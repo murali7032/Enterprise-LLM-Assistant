@@ -57,6 +57,7 @@ async def test_llm_service_cache_hit(monkeypatch) -> None:
   service = LLMService(provider=FakeProvider(), cache=Cache())
   result = await service.generate("hello")
   assert result.content == "cached"
+  assert result.cached is True
 
 
 @pytest.mark.asyncio

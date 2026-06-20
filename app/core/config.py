@@ -30,7 +30,8 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSION: int = 1536
 
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/llm_platform"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/llm_platform"
+    USE_POSTGRES: bool = False
 
     CHUNK_SIZE: int = 100
     CHUNK_OVERLAP: int = 10
@@ -55,6 +56,8 @@ class Settings(BaseSettings):
     MEMORY_ENABLED: bool = True
     MEMORY_MAX_MESSAGES: int = 10
     MEMORY_MAX_CHARS: int = 8000
+
+    EPHEMERAL_CHAT_DOCUMENTS: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

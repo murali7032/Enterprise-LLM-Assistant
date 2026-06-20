@@ -10,3 +10,4 @@ class LLMResult(BaseModel):
     completion_tokens: int = 0
     total_tokens: int = 0
     cost_usd: float = Field(default=0.0, ge=0.0)
+    cached: bool = False

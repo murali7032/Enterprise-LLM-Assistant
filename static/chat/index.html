@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Enterprise LLM Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/chat/styles.css?v=4" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark"></div>
+          <div>
+            <h1>LLM Assistant</h1>
+            <p>Enterprise platform</p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="new-chat-btn">New conversation</button>
+
+        <section class="panel">
+          <h2>Session</h2>
+          <label class="field">
+            <span>Session ID</span>
+            <input type="text" id="session-id" readonly />
+          </label>
+          <button type="button" class="btn btn-ghost" id="regen-session-btn">Regenerate session</button>
+          <button type="button" class="btn btn-ghost" id="clear-docs-btn">Clear uploaded docs</button>
+        </section>
+
+        <section class="panel">
+          <h2>Documents</h2>
+          <ul class="uploaded-docs" id="uploaded-docs"></ul>
+          <label class="field">
+            <span>YouTube / URL</span>
+            <input type="url" id="url-input" placeholder="https://youtube.com/watch?v=..." />
+          </label>
+          <button type="button" class="btn btn-ghost" id="url-ingest-btn">Ingest URL</button>
+          <p class="hint" id="upload-hint">PDF &amp; text ready. Excel, PPT, audio, video, YouTube — plug in extractors.</p>
+        </section>
+
+        <section class="panel">
+          <h2>Options</h2>
+          <label class="toggle">
+            <input type="checkbox" id="use-memory" checked />
+            <span>Conversation memory</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="use-rag" />
+            <span>RAG (document search)</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="use-stream" checked />
+            <span>Stream responses</span>
+          </label>
+        </section>
+
+        <section class="panel status-panel">
+          <h2>Status</h2>
+          <div class="status-row">
+            <span>API</span>
+            <span class="badge" id="api-status">checking…</span>
+          </div>
+          <div class="status-row">
+            <span>Auth</span>
+            <span class="badge" id="auth-status">pending</span>
+          </div>
+        </section>
+
+        <footer class="sidebar-footer">
+          <a href="/docs" target="_blank" rel="noreferrer">API docs</a>
+          <a href="/ready" target="_blank" rel="noreferrer">Readiness</a>
+        </footer>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h2>Chat</h2>
+            <p id="subtitle">Ask anything — memory and guardrails enabled</p>
+          </div>
+        </header>
+
+        <div class="messages" id="messages" aria-live="polite">
+          <article class="message assistant welcome">
+            <div class="avatar">AI</div>
+            <div class="bubble">
+              <p>Upload a document with the <strong>+</strong> button, then ask questions about it. Answers are scoped to files uploaded in this chat session.</p>
+            </div>
+          </article>
+        </div>
+
+        <form class="composer" id="chat-form">
+          <input type="file" id="file-input" hidden accept=".pdf,.txt,.md,.markdown,.csv,.xlsx,.xls,.ppt,.pptx,.mp3,.wav,.mp4,.mov" />
+          <button type="button" class="btn btn-attach" id="attach-btn" aria-label="Upload document" title="Upload document">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+          <textarea
+            id="question"
+            rows="1"
+            placeholder="Type your message…"
+            autocomplete="off"
+            required
+          ></textarea>
+          <button type="submit" class="btn btn-send" id="send-btn" aria-label="Send message">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </button>
+        </form>
+      </main>
+    </div>
+
+    <script src="/chat/app.js?v=5" type="module"></script>
+  </body>
+</html>
