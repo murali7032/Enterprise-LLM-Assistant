@@ -50,6 +50,28 @@ class Settings(BaseSettings):
     RATE_LIMIT_REQUESTS: int = 100
     RATE_LIMIT_WINDOW_SECONDS: int = 60
 
+    # Browser sessions (opaque id in HttpOnly cookie → Redis/memory store)
+    SESSION_COOKIE_NAME: str = "session_id"
+    SESSION_TTL_SECONDS: int = 60 * 60 * 24 * 14  # 14 days
+    SESSION_COOKIE_SECURE: bool = False  # set True behind HTTPS in production
+    SESSION_COOKIE_SAMESITE: str = "lax"
+    SESSION_BACKEND: str = "memory"  # "memory" | "redis"
+    CSRF_COOKIE_NAME: str = "csrf_token"
+    CSRF_HEADER_NAME: str = "X-CSRF-Token"
+    AUTH_DEV_TOKEN_ENABLED: bool = False  # open JWT mint; enable only for local/tests
+    AUTH_MIN_PASSWORD_LENGTH: int = 8
+    AUTH_LOGIN_MAX_FAILURES: int = 5
+    AUTH_LOCKOUT_SECONDS: int = 900
+    AUTH_RATE_LIMIT_REQUESTS: int = 20
+    AUTH_RATE_LIMIT_WINDOW_SECONDS: int = 60
+    DEFAULT_USER_ROLE: str = "user"
+    APP_PUBLIC_URL: str = "http://localhost:8000"
+
+    # OAuth (Google first; leave blank to disable)
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    OAUTH_STATE_TTL_SECONDS: int = 600
+
     LOG_LEVEL: str = "INFO"
     METRICS_ENABLED: bool = True
 

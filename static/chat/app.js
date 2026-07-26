@@ -21,14 +21,16 @@ const fileInput = document.getElementById("file-input");
 const uploadedDocsEl = document.getElementById("uploaded-docs");
 const urlInput = document.getElementById("url-input");
 const urlIngestBtn = document.getElementById("url-ingest-btn");
+const logoutBtn = document.getElementById("logout-btn");
+const userEmailEl = document.getElementById("user-email");
 
 /** @type {{ filename: string; document_id: string; chunks: number }[]} */
 let uploadedDocuments = [];
 
-/** In-memory only — never persisted (avoids stale JWT in localStorage). */
-let accessToken = "";
 let sessionId = localStorage.getItem(STORAGE_SESSION_KEY) || crypto.randomUUID();
 let isSending = false;
+let currentUser = null;
+let csrfToken = "";
 
 localStorage.removeItem(LEGACY_TOKEN_KEY);
 sessionIdEl.value = sessionId;
@@ -136,36 +138,57 @@ function buildSources(sources) {
   return `<div class="sources"><h3>Sources</h3>${items}</div>`;
 }
 
-async function fetchToken() {
-  setBadge(authStatusEl, "refreshing…", null);
-  const response = await fetch("/api/v1/auth/token", {
-    method: "POST",
+async function ensureCsrf() {
+  if (csrfToken) return csrfToken;
+  const response = await fetch("/api/v1/auth/csrf", {
+    credentials: "include",
     cache: "no-store",
-    headers: { "Cache-Control": "no-cache" },
   });
-  if (!response.ok) throw new Error("Failed to obtain access token");
+  if (!response.ok) throw new Error("Failed to obtain CSRF token");
   const data = await response.json();
-  accessToken = data.access_token;
-  setBadge(authStatusEl, "authenticated", true);
+  csrfToken = data.csrf_token;
+  return csrfToken;
 }
 
-async function authorizedFetch(url, options = {}, allowRetry = true) {
-  await fetchToken();
+async function ensureAuthenticated() {
+  setBadge(authStatusEl, "checking…", null);
+  const response = await fetch("/api/v1/auth/me", {
+    credentials: "include",
+    cache: "no-store",
+  });
+  if (response.status === 401) {
+    window.location.replace(`/auth/login.html?next=${encodeURIComponent("/chat/")}`);
+    throw new Error("Authentication required");
+  }
+  if (!response.ok) throw new Error("Failed to resolve session");
+  currentUser = await response.json();
+  setBadge(authStatusEl, "authenticated", true);
+  if (userEmailEl) {
+    userEmailEl.textContent = currentUser.email || currentUser.id || "signed in";
+  }
+  await ensureCsrf();
+  return currentUser;
+}
+
+async function authorizedFetch(url, options = {}) {
+  const headers = {
+    ...(options.headers || {}),
+    "Cache-Control": "no-cache",
+  };
+  if (options.method && options.method.toUpperCase() !== "GET") {
+    headers["X-CSRF-Token"] = await ensureCsrf();
+  }
 
   const response = await fetch(url, {
     ...options,
+    credentials: "include",
     cache: "no-store",
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${accessToken}`,
-      "Cache-Control": "no-cache",
-    },
+    headers,
   });
 
-  if (response.status === 401 && allowRetry) {
-    accessToken = "";
-    await fetchToken();
-    return authorizedFetch(url, options, false);
+  if (response.status === 401) {
+    window.location.replace(`/auth/login.html?next=${encodeURIComponent("/chat/")}`);
+    throw new Error("Authentication required");
   }
 
   return response;
@@ -310,16 +333,13 @@ function addSystemMessage(text) {
 }
 
 async function ingestFile(file) {
-  await fetchToken();
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(
+  const response = await authorizedFetch(
     `/api/v1/chat/upload?session_id=${encodeURIComponent(sessionId)}&collection=documents`,
     {
       method: "POST",
-      cache: "no-store",
-      headers: { Authorization: `Bearer ${accessToken}` },
       body: formData,
     }
   );
@@ -472,5 +492,16 @@ questionEl.addEventListener("keydown", (event) => {
   }
 });
 
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await authorizedFetch("/api/v1/auth/logout", { method: "POST" });
+    } catch {
+      // Still send the user to login.
+    }
+    window.location.replace("/auth/login.html");
+  });
+}
+
 checkHealth();
-fetchToken().catch(() => setBadge(authStatusEl, "auth failed", false));
+ensureAuthenticated().catch(() => setBadge(authStatusEl, "auth failed", false));

@@ -64,6 +64,10 @@ data:
   QDRANT_URL: http://qdrant:6333
   DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/llm_platform
   USE_POSTGRES: "true"
+  SESSION_BACKEND: redis
+  SESSION_COOKIE_SECURE: "true"
+  APP_PUBLIC_URL: https://example.com
+  AUTH_DEV_TOKEN_ENABLED: "false"
 ---
 apiVersion: v1
 kind: Secret
@@ -73,6 +77,8 @@ type: Opaque
 stringData:
   OPENAI_API_KEY: replace-me
   JWT_SECRET_KEY: replace-me
+  GOOGLE_CLIENT_ID: replace-me
+  GOOGLE_CLIENT_SECRET: replace-me
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

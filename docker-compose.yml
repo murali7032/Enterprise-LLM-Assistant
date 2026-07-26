@@ -8,6 +8,10 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/llm_platform
       USE_POSTGRES: "true"
+      SESSION_BACKEND: redis
+      SESSION_COOKIE_SECURE: "false"
+      APP_PUBLIC_URL: http://localhost:8000
+      AUTH_DEV_TOKEN_ENABLED: "false"
     depends_on:
       - redis
       - qdrant

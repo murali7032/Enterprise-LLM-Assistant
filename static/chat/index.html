@@ -6,19 +6,21 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>Enterprise LLM Assistant</title>
+    <link rel="icon" href="/chat/favicon.png?v=5" type="image/png" sizes="any" />
+    <link rel="apple-touch-icon" href="/chat/favicon.png?v=5" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/chat/styles.css?v=4" />
+    <link rel="stylesheet" href="/chat/styles.css?v=6" />
   </head>
   <body>
     <div class="app">
       <aside class="sidebar">
         <div class="brand">
-          <div class="brand-mark"></div>
+          <img class="brand-mark" src="/chat/favicon.png?v=5" alt="LLM Assistant" width="42" height="42" />
           <div>
             <h1>LLM Assistant</h1>
             <p>Enterprise platform</p>
@@ -74,6 +76,8 @@
             <span>Auth</span>
             <span class="badge" id="auth-status">pending</span>
           </div>
+          <p class="hint" id="user-email">not signed in</p>
+          <button type="button" class="btn btn-ghost" id="logout-btn">Sign out</button>
         </section>
 
         <footer class="sidebar-footer">

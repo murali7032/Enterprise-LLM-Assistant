@@ -46,11 +46,27 @@ chat_ui_dir = Path(__file__).resolve().parent.parent / "static" / "chat"
 if chat_ui_dir.exists():
     app.mount("/chat", NoCacheStaticFiles(directory=chat_ui_dir, html=True), name="chat-ui")
 
+auth_ui_dir = Path(__file__).resolve().parent.parent / "static" / "auth"
+if auth_ui_dir.exists():
+    app.mount("/auth", NoCacheStaticFiles(directory=auth_ui_dir, html=True), name="auth-ui")
+
 
 @app.get("/")
 async def root() -> RedirectResponse:
     """Redirect to the chat UI."""
     return RedirectResponse(url="/chat/")
+
+
+@app.get("/login")
+async def login_page() -> RedirectResponse:
+    """Convenience redirect to the login UI."""
+    return RedirectResponse(url="/auth/login.html")
+
+
+@app.get("/register")
+async def register_page() -> RedirectResponse:
+    """Convenience redirect to the register UI."""
+    return RedirectResponse(url="/auth/register.html")
 
 
 @app.exception_handler(AppException)

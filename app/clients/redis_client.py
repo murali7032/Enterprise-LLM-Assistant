@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from typing import Any
 
@@ -56,3 +58,36 @@ class RedisClient:
         await self.connect()
         assert self._client is not None
         await self._client.delete(key)
+
+    async def expire(self, key: str, ttl_seconds: int) -> None:
+        """Set key expiry in seconds."""
+        await self.connect()
+        assert self._client is not None
+        await self._client.expire(key, ttl_seconds)
+
+    async def sadd(self, key: str, *members: str) -> None:
+        """Add members to a Redis set."""
+        await self.connect()
+        assert self._client is not None
+        if members:
+            await self._client.sadd(key, *members)
+
+    async def srem(self, key: str, *members: str) -> None:
+        """Remove members from a Redis set."""
+        await self.connect()
+        assert self._client is not None
+        if members:
+            await self._client.srem(key, *members)
+
+    async def smembers(self, key: str) -> set[str]:
+        """Return all members of a Redis set."""
+        await self.connect()
+        assert self._client is not None
+        members = await self._client.smembers(key)
+        return set(members or [])
+
+    async def incr(self, key: str) -> int:
+        """Increment an integer counter."""
+        await self.connect()
+        assert self._client is not None
+        return int(await self._client.incr(key))

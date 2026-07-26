@@ -1,7 +1,16 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.dependencies import get_chat_service, get_llm_provider, get_llm_service
+from app.core.config import settings
+from app.dependencies import (
+  get_auth_rate_limiter,
+  get_chat_service,
+  get_in_memory_session_store,
+  get_in_memory_user_repository,
+  get_llm_provider,
+  get_llm_service,
+  get_login_lockout_store,
+)
 from app.main import app
 from app.models.llm_response import LLMResult
 from app.memory.conversation_memory import InMemoryConversationMemory
@@ -23,6 +32,17 @@ class FakeProvider(LLMProvider):
 
   async def stream(self, prompt: str):
     yield "chunk"
+
+
+@pytest.fixture(autouse=True)
+def enable_dev_token(monkeypatch) -> None:
+  monkeypatch.setattr(settings, "AUTH_DEV_TOKEN_ENABLED", True)
+  monkeypatch.setattr(settings, "SESSION_BACKEND", "memory")
+  monkeypatch.setattr(settings, "USE_POSTGRES", False)
+  get_in_memory_user_repository.cache_clear()
+  get_in_memory_session_store.cache_clear()
+  get_auth_rate_limiter.cache_clear()
+  get_login_lockout_store.cache_clear()
 
 
 @pytest.fixture

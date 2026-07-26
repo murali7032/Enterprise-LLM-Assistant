@@ -35,8 +35,13 @@ from app.providers.registry import ProviderRegistry
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.in_memory_document_repository import InMemoryDocumentRepository
 from app.repositories.postgres_document_repository import PostgresDocumentRepository
+from app.repositories.user_repository import InMemoryUserRepository, PostgresUserRepository, UserRepository
 from app.retrieval.retriever import HybridSearch, Reranker, Retriever
+from app.security.auth_limits import AuthRateLimiter, LoginLockoutStore
 from app.security.guardrails import PromptGuardrails
+from app.security.oauth_providers import OAuthProviderRegistry, build_default_oauth_registry
+from app.security.sessions import InMemorySessionStore, RedisSessionStore, SessionStore
+from app.services.auth_service import AuthService
 from app.services.chat_service import ChatService
 from app.services.document_service import DocumentService
 from app.services.ingestion_service import IngestionService
@@ -233,6 +238,58 @@ def get_agent_service() -> AgentService:
         executor=Executor(tool_router=get_tool_router()),
         tool_router=get_tool_router(),
     )
+
+
+@lru_cache
+def get_in_memory_user_repository() -> InMemoryUserRepository:
+    return InMemoryUserRepository()
+
+
+@lru_cache
+def get_in_memory_session_store() -> InMemorySessionStore:
+    return InMemorySessionStore()
+
+
+@lru_cache
+def get_oauth_registry() -> OAuthProviderRegistry:
+    return build_default_oauth_registry()
+
+
+def get_session_store() -> SessionStore:
+    """Resolve session backend (Redis in production, memory for local/tests)."""
+    if settings.SESSION_BACKEND.lower() == "redis":
+        return RedisSessionStore(redis_client=get_redis_client())
+    return get_in_memory_session_store()
+
+
+async def get_user_repository(
+    session: AsyncSession | None = Depends(get_db_session),
+) -> UserRepository:
+    """Resolve user identity store."""
+    if settings.USE_POSTGRES:
+        assert session is not None
+        return PostgresUserRepository(session=session)
+    return get_in_memory_user_repository()
+
+
+@lru_cache
+def get_auth_rate_limiter() -> AuthRateLimiter:
+    redis_client = get_redis_client() if settings.SESSION_BACKEND.lower() == "redis" else None
+    return AuthRateLimiter(redis_client=redis_client)
+
+
+@lru_cache
+def get_login_lockout_store() -> LoginLockoutStore:
+    redis_client = get_redis_client() if settings.SESSION_BACKEND.lower() == "redis" else None
+    return LoginLockoutStore(redis_client=redis_client)
+
+
+async def get_auth_service(
+    users: UserRepository = Depends(get_user_repository),
+    sessions: SessionStore = Depends(get_session_store),
+    lockout: LoginLockoutStore = Depends(get_login_lockout_store),
+) -> AuthService:
+    return AuthService(users=users, sessions=sessions, lockout=lockout)
 
 
 def validate_provider_configuration() -> None:

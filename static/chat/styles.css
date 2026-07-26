@@ -65,7 +65,9 @@ body {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--accent), #2a7cff);
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
   box-shadow: 0 8px 24px rgba(61, 214, 198, 0.25);
 }
 
