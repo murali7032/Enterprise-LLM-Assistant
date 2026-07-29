@@ -12,6 +12,7 @@ spec:
       labels:
         app: enterprise-llm-platform
     spec:
+      serviceAccountName: enterprise-llm-ops-reader
       containers:
         - name: api
           image: enterprise-llm-platform:latest
@@ -68,6 +69,9 @@ data:
   SESSION_COOKIE_SECURE: "true"
   APP_PUBLIC_URL: https://example.com
   AUTH_DEV_TOKEN_ENABLED: "false"
+  K8S_AUTH_MODE: incluster
+  K8S_DEFAULT_NAMESPACE: default
+  OPS_USE_LLM_HYPOTHESIS: "true"
 ---
 apiVersion: v1
 kind: Secret
@@ -79,6 +83,8 @@ stringData:
   JWT_SECRET_KEY: replace-me
   GOOGLE_CLIENT_ID: replace-me
   GOOGLE_CLIENT_SECRET: replace-me
+  OPS_WEBHOOK_SECRET: replace-me
+  OPS_SLACK_WEBHOOK_URL: ""
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

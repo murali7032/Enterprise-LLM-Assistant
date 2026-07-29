@@ -488,6 +488,48 @@ body {
   }
 }
 
+.agent-steps {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.agent-step {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 0.85rem;
+}
+
+.agent-step pre,
+.approval-card pre {
+  margin: 0.45rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  max-height: 180px;
+  overflow: auto;
+}
+
+.approval-card {
+  margin-top: 0.75rem;
+  border: 1px solid rgba(255, 204, 102, 0.45);
+  background: rgba(255, 204, 102, 0.08);
+  border-radius: 12px;
+  padding: 0.85rem;
+}
+
+.approval-card .btn {
+  margin-top: 0.5rem;
+  margin-right: 0.4rem;
+  width: auto;
+  display: inline-flex;
+  padding: 0.45rem 0.8rem;
+}
+
 @media (max-width: 900px) {
   .app {
     grid-template-columns: 1fr;

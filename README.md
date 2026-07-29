@@ -105,6 +105,8 @@ The platform is designed to support multiple LLM providers, Retrieval-Augmented 
 - Output Parsing
 - Tool Calling
 - AI Agents
+- Ops agent (Alertmanager webhook → read-only K8s diagnosis → findings + notify)
+- Chat agent mode with HITL approval for mutating playbooks
 
 ---
 
@@ -135,6 +137,9 @@ The platform is designed to support multiple LLM providers, Retrieval-Augmented 
 - Kubernetes
 - Helm Charts
 - GitHub Actions CI/CD
+  - On push to `main`, builds and pushes to ECR: `349558942960.dkr.ecr.us-east-1.amazonaws.com/agentops/main`
+  - Immutable tags: full git SHA + `sha-<7-char>` (never reuses `latest`)
+  - Requires repo secret `AWS_ROLE_ARN` (OIDC role trusted by this GitHub repo)
 
 ---
 
@@ -429,6 +434,47 @@ GET /ready
 ---
 
 # Chat API
+
+```
+POST /api/v1/chat
+```
+
+Request
+
+---
+
+# Ops agent (production diagnosis)
+
+v1 path (no Kafka required):
+
+1. Alertmanager (or any detector) POSTs to `/api/v1/ops/alerts`
+2. Platform collects **read-only** Kubernetes evidence (`get` / `list` / `events` / `logs`)
+3. Stores a structured **finding** (evidence + advisory hypothesis + suggested actions)
+4. Notifies via logs and optional Slack webhook (`OPS_SLACK_WEBHOOK_URL`)
+
+Mutations (`restart` / `scale`) are **not** automatic. In the chat UI, enable **Agent mode**; mutating playbooks return an approval card before execution.
+
+Kubernetes auth (prefer no long-lived kubeconfig in the image):
+
+| Mode | When |
+|------|------|
+| `K8S_AUTH_MODE=incluster` | Agent runs in-cluster with `enterprise-llm-ops-reader` ServiceAccount ([k8s/ops-rbac.yaml](k8s/ops-rbac.yaml)) |
+| `K8S_AUTH_MODE=kubeconfig` | Local/dev only |
+| `K8S_AUTH_MODE=mock` | Tests / demos without a cluster |
+
+```
+POST /api/v1/ops/alerts
+POST /api/v1/ops/alerts/simple   # authenticated demo helper
+GET  /api/v1/ops/findings
+POST /api/v1/agents/run          # agent mode from chat
+POST /api/v1/agents/approve      # HITL mutate
+```
+
+Optional header for webhooks: `X-Ops-Webhook-Secret: <OPS_WEBHOOK_SECRET>`
+
+---
+
+# Chat API (detail)
 
 ```
 POST /api/v1/chat

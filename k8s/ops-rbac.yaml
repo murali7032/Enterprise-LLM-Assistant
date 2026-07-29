@@ -1,0 +1,64 @@
+# Read-only ServiceAccount for auto-diagnosis (get/list/watch)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: enterprise-llm-ops-reader
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: enterprise-llm-ops-reader
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events", "services", "endpoints", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: enterprise-llm-ops-reader
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: enterprise-llm-ops-reader
+subjects:
+  - kind: ServiceAccount
+    name: enterprise-llm-ops-reader
+    namespace: default
+---
+# Separate write SA — only used after HITL approval for playbooks
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: enterprise-llm-ops-writer
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: enterprise-llm-ops-writer
+  namespace: default
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "deployments/scale"]
+    verbs: ["get", "list", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: enterprise-llm-ops-writer
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: enterprise-llm-ops-writer
+subjects:
+  - kind: ServiceAccount
+    name: enterprise-llm-ops-writer
+    namespace: default

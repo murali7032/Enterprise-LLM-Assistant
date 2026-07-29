@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
+
 
 def _csrf_headers(client: TestClient) -> dict[str, str]:
   response = client.get("/api/v1/auth/csrf")
@@ -102,7 +104,9 @@ def test_verify_email_and_password_reset(client: TestClient) -> None:
   assert login.status_code == 200
 
 
-def test_oauth_providers_empty_without_config(client: TestClient) -> None:
+def test_oauth_providers_empty_without_config(client: TestClient, monkeypatch) -> None:
+  monkeypatch.setattr(settings, "GOOGLE_CLIENT_ID", "")
+  monkeypatch.setattr(settings, "GOOGLE_CLIENT_SECRET", "")
   response = client.get("/api/v1/auth/oauth/providers")
   assert response.status_code == 200
   assert response.json()["providers"] == []

@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/chat/styles.css?v=6" />
+    <link rel="stylesheet" href="/chat/styles.css?v=7" />
   </head>
   <body>
     <div class="app">
@@ -64,6 +64,10 @@
             <input type="checkbox" id="use-stream" checked />
             <span>Stream responses</span>
           </label>
+          <label class="toggle">
+            <input type="checkbox" id="use-agent" />
+            <span>Agent mode (tools / K8s)</span>
+          </label>
         </section>
 
         <section class="panel status-panel">
@@ -98,7 +102,7 @@
           <article class="message assistant welcome">
             <div class="avatar">AI</div>
             <div class="bubble">
-              <p>Upload a document with the <strong>+</strong> button, then ask questions about it. Answers are scoped to files uploaded in this chat session.</p>
+              <p>Upload a document with the <strong>+</strong> button, then ask questions about it. Enable <strong>Agent mode</strong> to run tools (read-only K8s inspect; mutating playbooks ask for approval).</p>
             </div>
           </article>
         </div>
@@ -126,6 +130,6 @@
       </main>
     </div>
 
-    <script src="/chat/app.js?v=5" type="module"></script>
+    <script src="/chat/app.js?v=6" type="module"></script>
   </body>
 </html>

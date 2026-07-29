@@ -37,6 +37,17 @@
             <span>Password (min 8 characters)</span>
             <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required />
           </label>
+          <label class="field">
+            <span>Retype password</span>
+            <input
+              type="password"
+              id="password-confirm"
+              name="password_confirm"
+              autocomplete="new-password"
+              minlength="8"
+              required
+            />
+          </label>
           <button class="btn btn-primary" type="submit" id="submit-btn">Create account</button>
         </form>
 
@@ -61,14 +72,18 @@
         event.preventDefault();
         hideError(errorEl);
         successEl.classList.remove("visible");
+        const password = document.getElementById("password").value;
+        const passwordConfirm = document.getElementById("password-confirm").value;
+        if (password !== passwordConfirm) {
+          showError(errorEl, "Passwords do not match");
+          return;
+        }
         submitBtn.disabled = true;
         try {
+          const email = document.getElementById("email").value.trim();
           const response = await authFetch("/api/v1/auth/register", {
             method: "POST",
-            body: JSON.stringify({
-              email: document.getElementById("email").value.trim(),
-              password: document.getElementById("password").value,
-            }),
+            body: JSON.stringify({ email, password }),
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok) {
@@ -79,10 +94,7 @@
 
           const loginResponse = await authFetch("/api/v1/auth/login", {
             method: "POST",
-            body: JSON.stringify({
-              email: document.getElementById("email").value.trim(),
-              password: document.getElementById("password").value,
-            }),
+            body: JSON.stringify({ email, password }),
           });
           if (!loginResponse.ok) {
             window.location.replace("/auth/login.html");

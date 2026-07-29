@@ -43,6 +43,8 @@ class PromptBuilder:
             "You are an enterprise agent planner.\n"
             f"Goal: {goal}\n"
             f"Available tools: {tool_list}\n"
+            "Notes: kubernetes is read-only (get/list/events/logs). "
+            "k8s_playbook is mutating (restart/scale) and requires human approval.\n"
             f"Observations:\n{history}\n"
             'Respond with JSON: {"thought": "...", "action": "tool_name|finish", "input": "..."}'
         )

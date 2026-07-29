@@ -47,9 +47,14 @@ from app.services.document_service import DocumentService
 from app.services.ingestion_service import IngestionService
 from app.services.llm_service import LLMService
 from app.tools.kubernetes_tool import KubernetesTool
+from app.tools.k8s_playbook_tool import K8sPlaybookTool
 from app.tools.shell_tool import ShellTool
 from app.tools.sql_tool import SQLTool
 from app.tools.weather_tool import WeatherTool
+from app.clients.kubernetes_client import KubernetesClient
+from app.repositories.finding_repository import ApprovalStore, FindingStore
+from app.services.ops_diagnosis_service import OpsDiagnosisService
+from app.services.ops_notifier import OpsNotifier
 
 
 @lru_cache
@@ -217,12 +222,34 @@ def get_document_service(
 
 
 @lru_cache
+def get_kubernetes_client() -> KubernetesClient:
+    return KubernetesClient()
+
+
+@lru_cache
+def get_finding_store() -> FindingStore:
+    return FindingStore()
+
+
+@lru_cache
+def get_approval_store() -> ApprovalStore:
+    return ApprovalStore()
+
+
+@lru_cache
+def get_ops_notifier() -> OpsNotifier:
+    return OpsNotifier()
+
+
+@lru_cache
 def get_tool_router() -> ToolRouter:
+    k8s_client = get_kubernetes_client()
     return ToolRouter(
         tools=[
             WeatherTool(),
             SQLTool(),
-            KubernetesTool(),
+            KubernetesTool(client=k8s_client),
+            K8sPlaybookTool(client=k8s_client),
             ShellTool(),
         ]
     )
@@ -237,6 +264,18 @@ def get_agent_service() -> AgentService:
         ),
         executor=Executor(tool_router=get_tool_router()),
         tool_router=get_tool_router(),
+        approval_store=get_approval_store(),
+    )
+
+
+def get_ops_diagnosis_service() -> OpsDiagnosisService:
+    return OpsDiagnosisService(
+        k8s_tool=KubernetesTool(client=get_kubernetes_client()),
+        finding_store=get_finding_store(),
+        notifier=get_ops_notifier(),
+        llm_service=get_llm_service() if settings.OPS_USE_LLM_HYPOTHESIS else None,
+        prompt_builder=get_prompt_builder(),
+        output_parser=get_output_parser(),
     )
 
 

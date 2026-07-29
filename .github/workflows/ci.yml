@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 349558942960.dkr.ecr.us-east-1.amazonaws.com
+  ECR_REPOSITORY: agentops/main
+
 jobs:
   build-test:
     runs-on: ubuntu-latest
@@ -34,5 +39,54 @@ jobs:
           OPENAI_API_KEY: test-key
         run: pytest --cov=app --cov-report=term-missing
 
-      - name: Build Docker image
+      - name: Build Docker image (smoke)
         run: docker build -t enterprise-llm-platform:ci .
+
+  push-ecr:
+    needs: build-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      image_uri: ${{ steps.meta.outputs.image_uri }}
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tags
+        id: meta
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          # Immutable ECR: every push must use a unique tag (full SHA + short SHA)
+          echo "image_tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "short_tag=sha-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image_uri=${ECR_REGISTRY}/${ECR_REPOSITORY}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push to ECR
+        run: |
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}"
+          FULL_TAG="${{ steps.meta.outputs.image_tag }}"
+          SHORT_TAG="${{ steps.meta.outputs.short_tag }}"
+
+          docker build \
+            -t "${IMAGE_URI}:${FULL_TAG}" \
+            -t "${IMAGE_URI}:${SHORT_TAG}" \
+            .
+
+          docker push "${IMAGE_URI}:${FULL_TAG}"
+          docker push "${IMAGE_URI}:${SHORT_TAG}"
+
+          echo "Pushed:"
+          echo "  ${IMAGE_URI}:${FULL_TAG}"
+          echo "  ${IMAGE_URI}:${SHORT_TAG}"

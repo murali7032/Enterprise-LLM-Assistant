@@ -81,6 +81,15 @@ class Settings(BaseSettings):
 
     EPHEMERAL_CHAT_DOCUMENTS: bool = True
 
+    # Kubernetes / Ops agent
+    K8S_AUTH_MODE: str = "mock"  # mock | incluster | kubeconfig
+    KUBECONFIG_PATH: str = ""  # optional path when K8S_AUTH_MODE=kubeconfig
+    K8S_DEFAULT_NAMESPACE: str = "default"
+    K8S_MAX_SCALE_REPLICAS: int = 20
+    OPS_WEBHOOK_SECRET: str = ""  # optional shared secret for /api/v1/ops/alerts
+    OPS_SLACK_WEBHOOK_URL: str = ""  # optional Slack incoming webhook
+    OPS_USE_LLM_HYPOTHESIS: bool = True
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

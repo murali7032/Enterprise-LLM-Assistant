@@ -11,6 +11,7 @@ const sessionIdEl = document.getElementById("session-id");
 const useMemoryEl = document.getElementById("use-memory");
 const useRagEl = document.getElementById("use-rag");
 const useStreamEl = document.getElementById("use-stream");
+const useAgentEl = document.getElementById("use-agent");
 const apiStatusEl = document.getElementById("api-status");
 const authStatusEl = document.getElementById("auth-status");
 const newChatBtn = document.getElementById("new-chat-btn");
@@ -275,6 +276,99 @@ async function sendStreaming(payload, bubbleEl) {
   return { content, sources };
 }
 
+async function sendAgent(goal, approvedActionIds = []) {
+  const response = await authorizedFetch("/api/v1/agents/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      goal,
+      session_id: sessionId,
+      max_iterations: 5,
+      approved_action_ids: approvedActionIds,
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.message || data.detail || "Agent request failed");
+  }
+  return data;
+}
+
+async function approveAgentAction(approvalId) {
+  const response = await authorizedFetch("/api/v1/agents/approve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ approval_id: approvalId, session_id: sessionId }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.message || data.detail || "Approval failed");
+  }
+  return data;
+}
+
+function renderAgentResult(data) {
+  const stepsHtml = (data.steps || [])
+    .map(
+      (step, index) =>
+        `<div class="agent-step"><strong>Step ${index + 1}</strong> · <code>${escapeHtml(step.action)}</code>` +
+        `<pre>${escapeHtml(String(step.observation || "").slice(0, 2000))}</pre></div>`
+    )
+    .join("");
+
+  const pending = data.pending_approvals || [];
+  const pendingHtml = pending
+    .map((item) => {
+      const args = escapeHtml(JSON.stringify(item.args || {}, null, 2));
+      return (
+        `<div class="approval-card" data-approval-id="${escapeHtml(item.approval_id)}">` +
+        `<p><strong>Approval required</strong> — ${escapeHtml(item.action)}</p>` +
+        `<pre>${args}</pre>` +
+        `<p class="hint">${escapeHtml(item.reason || "")}</p>` +
+        `<button type="button" class="btn btn-primary approve-btn">Approve &amp; run</button>` +
+        `<button type="button" class="btn btn-ghost deny-btn">Deny</button>` +
+        `</div>`
+      );
+    })
+    .join("");
+
+  return (
+    renderMarkdown(data.answer || "No response.") +
+    (stepsHtml ? `<div class="agent-steps">${stepsHtml}</div>` : "") +
+    pendingHtml
+  );
+}
+
+function wireApprovalButtons(bubbleEl) {
+  bubbleEl.querySelectorAll(".approval-card").forEach((card) => {
+    const approvalId = card.getAttribute("data-approval-id");
+    const approveBtn = card.querySelector(".approve-btn");
+    const denyBtn = card.querySelector(".deny-btn");
+    if (approveBtn) {
+      approveBtn.addEventListener("click", async () => {
+        approveBtn.disabled = true;
+        try {
+          const result = await approveAgentAction(approvalId);
+          card.innerHTML =
+            `<p><strong>Approved</strong> — ${escapeHtml(result.status)}</p>` +
+            `<pre>${escapeHtml(JSON.stringify(result.result || {}, null, 2).slice(0, 2000))}</pre>`;
+        } catch (error) {
+          card.insertAdjacentHTML(
+            "beforeend",
+            `<p class="hint">${escapeHtml(error.message)}</p>`
+          );
+          approveBtn.disabled = false;
+        }
+      });
+    }
+    if (denyBtn) {
+      denyBtn.addEventListener("click", () => {
+        card.innerHTML = `<p><strong>Denied</strong> — mutating action was not executed.</p>`;
+      });
+    }
+  });
+}
+
 async function handleSubmit(event) {
   event.preventDefault();
   if (isSending) return;
@@ -288,8 +382,6 @@ async function handleSubmit(event) {
   questionEl.value = "";
   questionEl.style.height = "auto";
 
-  const payload = buildChatPayload(question);
-
   const assistantArticle = createMessage(
     "assistant",
     '<div class="typing"><span></span><span></span><span></span></div>'
@@ -297,17 +389,29 @@ async function handleSubmit(event) {
   const bubbleEl = assistantArticle.querySelector(".bubble");
 
   try {
-    if (useStreamEl.checked) {
-      const { content, sources } = await sendStreaming(payload, bubbleEl);
-      bubbleEl.innerHTML =
-        renderMarkdown(content || "No response.") + buildSources(sources);
+    if (useAgentEl && useAgentEl.checked) {
+      const data = await sendAgent(question);
+      if (data.session_id) {
+        sessionId = data.session_id;
+        sessionIdEl.value = sessionId;
+        localStorage.setItem(STORAGE_SESSION_KEY, sessionId);
+      }
+      bubbleEl.innerHTML = renderAgentResult(data);
+      wireApprovalButtons(bubbleEl);
     } else {
-      const data = await sendNonStreaming(payload);
-      sessionId = data.session_id || sessionId;
-      sessionIdEl.value = sessionId;
-      localStorage.setItem(STORAGE_SESSION_KEY, sessionId);
-      bubbleEl.innerHTML =
-        renderMarkdown(data.answer || "No response.") + buildMeta(data) + buildSources(data.sources);
+      const payload = buildChatPayload(question);
+      if (useStreamEl.checked) {
+        const { content, sources } = await sendStreaming(payload, bubbleEl);
+        bubbleEl.innerHTML =
+          renderMarkdown(content || "No response.") + buildSources(sources);
+      } else {
+        const data = await sendNonStreaming(payload);
+        sessionId = data.session_id || sessionId;
+        sessionIdEl.value = sessionId;
+        localStorage.setItem(STORAGE_SESSION_KEY, sessionId);
+        bubbleEl.innerHTML =
+          renderMarkdown(data.answer || "No response.") + buildMeta(data) + buildSources(data.sources);
+      }
     }
   } catch (error) {
     bubbleEl.innerHTML = `<p>${escapeHtml(error.message)}</p><div class="meta"><span class="chip error">error</span></div>`;

@@ -7,9 +7,13 @@ from app.dependencies import (
   get_chat_service,
   get_in_memory_session_store,
   get_in_memory_user_repository,
+  get_kubernetes_client,
   get_llm_provider,
   get_llm_service,
   get_login_lockout_store,
+  get_tool_router,
+  get_finding_store,
+  get_approval_store,
 )
 from app.main import app
 from app.models.llm_response import LLMResult
@@ -39,10 +43,16 @@ def enable_dev_token(monkeypatch) -> None:
   monkeypatch.setattr(settings, "AUTH_DEV_TOKEN_ENABLED", True)
   monkeypatch.setattr(settings, "SESSION_BACKEND", "memory")
   monkeypatch.setattr(settings, "USE_POSTGRES", False)
+  monkeypatch.setattr(settings, "K8S_AUTH_MODE", "mock")
+  monkeypatch.setattr(settings, "OPS_USE_LLM_HYPOTHESIS", False)
   get_in_memory_user_repository.cache_clear()
   get_in_memory_session_store.cache_clear()
   get_auth_rate_limiter.cache_clear()
   get_login_lockout_store.cache_clear()
+  get_kubernetes_client.cache_clear()
+  get_tool_router.cache_clear()
+  get_finding_store.cache_clear()
+  get_approval_store.cache_clear()
 
 
 @pytest.fixture

@@ -8,8 +8,8 @@ from app.core.config import settings
 from app.core.exceptions import AuthenticationException, AuthorizationException
 
 ROLE_PERMISSIONS = {
-    "admin": {"chat", "documents", "agents", "metrics"},
-    "user": {"chat", "documents"},
+    "admin": {"chat", "documents", "agents", "metrics", "ops"},
+    "user": {"chat", "documents", "agents", "ops"},
     "viewer": {"chat"},
 }
 

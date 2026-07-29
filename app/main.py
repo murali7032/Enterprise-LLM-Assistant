@@ -12,6 +12,7 @@ from app.api.auth import router as auth_router
 from app.api.chat import router as chat_router
 from app.api.documents import router as documents_router
 from app.api.health import router as health_router
+from app.api.ops import router as ops_router
 from app.core.config import settings
 from app.core.exceptions import AppException, LLMProviderException
 from app.db.database import close_db, init_db
@@ -38,6 +39,7 @@ app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(documents_router)
 app.include_router(agents_router)
+app.include_router(ops_router)
 
 if settings.METRICS_ENABLED:
     app.mount("/metrics", make_asgi_app())
