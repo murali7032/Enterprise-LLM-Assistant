@@ -5,7 +5,7 @@ from __future__ import annotations
 import secrets
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any
+# from typing import Any
 from urllib.parse import urlencode
 
 import httpx

@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from app.core.exceptions import UnsupportedExtractionException
-from app.extraction.pdf_extractor import PdfExtractor
+# from app.extraction.pdf_extractor import PdfExtractor
 from app.extraction.registry import ExtractionRegistry, get_default_extraction_registry
 from app.extraction.text_extractor import PlainTextExtractor
 from app.services.ingestion_service import IngestionService, RecursiveTextSplitter
