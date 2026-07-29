@@ -30,7 +30,9 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSION: int = 1536
 
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/llm_platform"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/llm_platform"
+    )
     USE_POSTGRES: bool = False
 
     CHUNK_SIZE: int = 100

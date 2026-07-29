@@ -18,5 +18,15 @@ class ShellTool(Tool):
         allowed = {"pwd", "whoami", "date"}
         command = query.strip()
         if command not in allowed:
-            return {"command": command, "stdout": "", "stderr": "Command not allowed", "exit_code": 1}
-        return {"command": command, "stdout": f"simulated output for {command}", "stderr": "", "exit_code": 0}
+            return {
+                "command": command,
+                "stdout": "",
+                "stderr": "Command not allowed",
+                "exit_code": 1,
+            }
+        return {
+            "command": command,
+            "stdout": f"simulated output for {command}",
+            "stderr": "",
+            "exit_code": 0,
+        }

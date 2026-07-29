@@ -53,7 +53,9 @@ class LoginLockoutStore:
         if self._redis is not None and settings.SESSION_BACKEND == "redis":
             locked = await self._redis.get(f"auth_lock:{key}")
             if locked:
-                raise HTTPException(status_code=423, detail="Account temporarily locked")
+                raise HTTPException(
+                    status_code=423, detail="Account temporarily locked"
+                )
             return
         until = self._locked_until.get(key)
         if until and until > time.monotonic():
@@ -70,7 +72,9 @@ class LoginLockoutStore:
             if count == 1:
                 await self._redis.expire(fail_key, settings.AUTH_LOCKOUT_SECONDS)
             if count >= settings.AUTH_LOGIN_MAX_FAILURES:
-                await self._redis.set(f"auth_lock:{key}", "1", ttl_seconds=settings.AUTH_LOCKOUT_SECONDS)
+                await self._redis.set(
+                    f"auth_lock:{key}", "1", ttl_seconds=settings.AUTH_LOCKOUT_SECONDS
+                )
             return
 
         self._failures[key] = self._failures.get(key, 0) + 1

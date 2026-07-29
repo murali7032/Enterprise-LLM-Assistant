@@ -49,7 +49,9 @@ class RedisClient:
         raw = await self.get(key)
         return json.loads(raw) if raw else None
 
-    async def set_json(self, key: str, value: dict[str, Any], ttl_seconds: int | None = None) -> None:
+    async def set_json(
+        self, key: str, value: dict[str, Any], ttl_seconds: int | None = None
+    ) -> None:
         """Serialize and store a JSON value."""
         await self.set(key, json.dumps(value), ttl_seconds=ttl_seconds)
 

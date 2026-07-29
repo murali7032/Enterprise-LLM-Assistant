@@ -19,13 +19,17 @@ class OutputParser:
     def parse_json(self, content: str) -> dict[str, Any]:
         """Parse JSON from raw or fenced model output."""
         cleaned = content.strip()
-        fenced = re.search(r"```(?:json)?\s*(.*?)```", cleaned, flags=re.DOTALL | re.IGNORECASE)
+        fenced = re.search(
+            r"```(?:json)?\s*(.*?)```", cleaned, flags=re.DOTALL | re.IGNORECASE
+        )
         if fenced:
             cleaned = fenced.group(1).strip()
         try:
             parsed = json.loads(cleaned)
         except json.JSONDecodeError as exc:
-            raise AppException(f"Failed to parse JSON output: {exc}", status_code=422) from exc
+            raise AppException(
+                f"Failed to parse JSON output: {exc}", status_code=422
+            ) from exc
         if not isinstance(parsed, dict):
             raise AppException("JSON output must be an object", status_code=422)
         return parsed
@@ -35,7 +39,9 @@ class OutputParser:
         try:
             return model.model_validate(self.parse_json(content))
         except ValidationError as exc:
-            raise AppException(f"Failed to validate model output: {exc}", status_code=422) from exc
+            raise AppException(
+                f"Failed to validate model output: {exc}", status_code=422
+            ) from exc
 
     def parse_tool_response(self, content: str) -> dict[str, Any]:
         """Parse tool invocation output."""

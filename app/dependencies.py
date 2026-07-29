@@ -35,11 +35,18 @@ from app.providers.registry import ProviderRegistry
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.in_memory_document_repository import InMemoryDocumentRepository
 from app.repositories.postgres_document_repository import PostgresDocumentRepository
-from app.repositories.user_repository import InMemoryUserRepository, PostgresUserRepository, UserRepository
+from app.repositories.user_repository import (
+    InMemoryUserRepository,
+    PostgresUserRepository,
+    UserRepository,
+)
 from app.retrieval.retriever import HybridSearch, Reranker, Retriever
 from app.security.auth_limits import AuthRateLimiter, LoginLockoutStore
 from app.security.guardrails import PromptGuardrails
-from app.security.oauth_providers import OAuthProviderRegistry, build_default_oauth_registry
+from app.security.oauth_providers import (
+    OAuthProviderRegistry,
+    build_default_oauth_registry,
+)
 from app.security.sessions import InMemorySessionStore, RedisSessionStore, SessionStore
 from app.services.auth_service import AuthService
 from app.services.chat_service import ChatService
@@ -136,9 +143,13 @@ def get_provider_registry() -> ProviderRegistry:
     registry = ProviderRegistry()
     registry.register("openai", lambda: OpenAIProvider(client=get_openai_client()))
     registry.register("gemini", lambda: GeminiProvider(client=get_gemini_client()))
-    registry.register("anthropic", lambda: AnthropicProvider(client=get_anthropic_client()))
+    registry.register(
+        "anthropic", lambda: AnthropicProvider(client=get_anthropic_client())
+    )
     registry.register("ollama", lambda: OllamaProvider(client=get_ollama_client()))
-    registry.register("azure_openai", lambda: AzureOpenAIProvider(client=get_azure_openai_client()))
+    registry.register(
+        "azure_openai", lambda: AzureOpenAIProvider(client=get_azure_openai_client())
+    )
     return registry
 
 
@@ -313,13 +324,17 @@ async def get_user_repository(
 
 @lru_cache
 def get_auth_rate_limiter() -> AuthRateLimiter:
-    redis_client = get_redis_client() if settings.SESSION_BACKEND.lower() == "redis" else None
+    redis_client = (
+        get_redis_client() if settings.SESSION_BACKEND.lower() == "redis" else None
+    )
     return AuthRateLimiter(redis_client=redis_client)
 
 
 @lru_cache
 def get_login_lockout_store() -> LoginLockoutStore:
-    redis_client = get_redis_client() if settings.SESSION_BACKEND.lower() == "redis" else None
+    redis_client = (
+        get_redis_client() if settings.SESSION_BACKEND.lower() == "redis" else None
+    )
     return LoginLockoutStore(redis_client=redis_client)
 
 

@@ -39,7 +39,9 @@ class SessionStore(ABC):
         """Revoke every session for a user. Returns count deleted."""
 
     @abstractmethod
-    async def set_oauth_state(self, state: str, payload: dict[str, Any], ttl_seconds: int | None = None) -> None:
+    async def set_oauth_state(
+        self, state: str, payload: dict[str, Any], ttl_seconds: int | None = None
+    ) -> None:
         """Store OAuth CSRF state."""
 
     @abstractmethod
@@ -93,8 +95,13 @@ class InMemorySessionStore(SessionStore):
             await self.delete(session_id)
         return len(ids)
 
-    async def set_oauth_state(self, state: str, payload: dict[str, Any], ttl_seconds: int | None = None) -> None:
-        self._oauth_states[state] = {**payload, "_ttl": ttl_seconds or settings.OAUTH_STATE_TTL_SECONDS}
+    async def set_oauth_state(
+        self, state: str, payload: dict[str, Any], ttl_seconds: int | None = None
+    ) -> None:
+        self._oauth_states[state] = {
+            **payload,
+            "_ttl": ttl_seconds or settings.OAUTH_STATE_TTL_SECONDS,
+        }
 
     async def pop_oauth_state(self, state: str) -> dict[str, Any] | None:
         data = self._oauth_states.pop(state, None)
@@ -154,7 +161,9 @@ class RedisSessionStore(SessionStore):
         await self._redis.delete(self._user_key(user_id))
         return count
 
-    async def set_oauth_state(self, state: str, payload: dict[str, Any], ttl_seconds: int | None = None) -> None:
+    async def set_oauth_state(
+        self, state: str, payload: dict[str, Any], ttl_seconds: int | None = None
+    ) -> None:
         ttl = ttl_seconds or settings.OAUTH_STATE_TTL_SECONDS
         await self._redis.set_json(self._oauth_key(state), payload, ttl_seconds=ttl)
 

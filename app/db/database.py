@@ -6,7 +6,9 @@ from app.core.config import settings
 from app.db.models import Base
 
 engine = create_async_engine(settings.DATABASE_URL, echo=settings.DEBUG)
-async_session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+async_session_factory = async_sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession
+)
 
 
 async def init_db() -> None:

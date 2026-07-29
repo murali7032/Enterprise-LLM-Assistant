@@ -19,57 +19,59 @@ from tests.conftest import FakeProvider
 
 @pytest.mark.asyncio
 async def test_chat_service_rag_path() -> None:
-  retriever = MagicMock()
-  retriever.retrieve = AsyncMock(
-    return_value=[DocumentChunk(id="1", content="k8s docs", score=0.9, metadata={})]
-  )
-  embedding_client = MagicMock()
-  embedding_client.embed = AsyncMock(return_value=[[0.1, 0.2]])
-  service = ChatService(
-    llm_service=LLMService(provider=FakeProvider(), cache=None),
-    prompt_builder=PromptBuilder(),
-    output_parser=OutputParser(),
-    guardrails=PromptGuardrails(),
-    retriever=retriever,
-    embedding_client=embedding_client,
-    memory=InMemoryConversationMemory(),
-  )
-  response = await service.chat(ChatRequest(question="search kubernetes docs", use_rag=True))
-  assert response.sources
-  assert response.answer.startswith("answer:")
+    retriever = MagicMock()
+    retriever.retrieve = AsyncMock(
+        return_value=[DocumentChunk(id="1", content="k8s docs", score=0.9, metadata={})]
+    )
+    embedding_client = MagicMock()
+    embedding_client.embed = AsyncMock(return_value=[[0.1, 0.2]])
+    service = ChatService(
+        llm_service=LLMService(provider=FakeProvider(), cache=None),
+        prompt_builder=PromptBuilder(),
+        output_parser=OutputParser(),
+        guardrails=PromptGuardrails(),
+        retriever=retriever,
+        embedding_client=embedding_client,
+        memory=InMemoryConversationMemory(),
+    )
+    response = await service.chat(
+        ChatRequest(question="search kubernetes docs", use_rag=True)
+    )
+    assert response.sources
+    assert response.answer.startswith("answer:")
 
 
 @pytest.mark.asyncio
 async def test_kubernetes_tool() -> None:
-  tool = KubernetesTool()
-  result = await tool.execute("pods")
-  assert result["status"] == "Running"
+    tool = KubernetesTool()
+    result = await tool.execute("pods")
+    assert result["status"] == "Running"
 
 
 def test_health_ready_with_mocks() -> None:
-  redis = MagicMock()
-  redis.ping = AsyncMock(return_value=True)
-  qdrant = MagicMock()
-  qdrant.health = AsyncMock(return_value=True)
-  app.dependency_overrides[get_redis_client] = lambda: redis
-  app.dependency_overrides[get_qdrant_client] = lambda: qdrant
-  with TestClient(app) as client:
-    response = client.get("/ready")
-    assert response.status_code == 200
-    assert response.json()["status"] == "READY"
-  app.dependency_overrides.clear()
+    redis = MagicMock()
+    redis.ping = AsyncMock(return_value=True)
+    qdrant = MagicMock()
+    qdrant.health = AsyncMock(return_value=True)
+    app.dependency_overrides[get_redis_client] = lambda: redis
+    app.dependency_overrides[get_qdrant_client] = lambda: qdrant
+    with TestClient(app) as client:
+        response = client.get("/ready")
+        assert response.status_code == 200
+        assert response.json()["status"] == "READY"
+    app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
 async def test_chat_service_stream() -> None:
-  service = ChatService(
-    llm_service=LLMService(provider=FakeProvider(), cache=None),
-    prompt_builder=PromptBuilder(),
-    output_parser=OutputParser(),
-    guardrails=PromptGuardrails(),
-    memory=InMemoryConversationMemory(),
-  )
-  chunks = []
-  async for chunk in service.stream(ChatRequest(question="hello")):
-    chunks.append(chunk)
-  assert chunks == ["chunk"]
+    service = ChatService(
+        llm_service=LLMService(provider=FakeProvider(), cache=None),
+        prompt_builder=PromptBuilder(),
+        output_parser=OutputParser(),
+        guardrails=PromptGuardrails(),
+        memory=InMemoryConversationMemory(),
+    )
+    chunks = []
+    async for chunk in service.stream(ChatRequest(question="hello")):
+        chunks.append(chunk)
+    assert chunks == ["chunk"]

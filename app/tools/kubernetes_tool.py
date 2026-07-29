@@ -56,7 +56,9 @@ class KubernetesTool(Tool):
             raise AppException(f"Unsupported kind for list: {kind}", status_code=400)
 
         if action == "events":
-            return await self._client.list_events(namespace=namespace, involved_name=str(name) if name else None)
+            return await self._client.list_events(
+                namespace=namespace, involved_name=str(name) if name else None
+            )
 
         if action == "logs":
             if not name:

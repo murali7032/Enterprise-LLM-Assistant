@@ -5,7 +5,9 @@ from app.extraction.base import DocumentExtractor, ExtractedContent
 class _StubExtractor(DocumentExtractor):
     """Base class for extractors registered but not yet implemented."""
 
-    def __init__(self, source_type: str, extensions: frozenset[str], message: str) -> None:
+    def __init__(
+        self, source_type: str, extensions: frozenset[str], message: str
+    ) -> None:
         self.source_type = source_type
         self.extensions = extensions
         self._message = message
@@ -59,7 +61,9 @@ class YoutubeExtractor(DocumentExtractor):
     url_patterns = ("youtube.com/watch", "youtu.be/", "youtube.com/shorts/")
 
     async def extract_bytes(self, file_bytes: bytes, filename: str) -> ExtractedContent:
-        raise UnsupportedExtractionException("YouTube extraction requires a URL, not a file upload.")
+        raise UnsupportedExtractionException(
+            "YouTube extraction requires a URL, not a file upload."
+        )
 
     async def extract_url(self, url: str) -> ExtractedContent:
         raise UnsupportedExtractionException(

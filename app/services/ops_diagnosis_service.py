@@ -69,17 +69,28 @@ class OpsDiagnosisService:
             if resource and kind in {"pod", "pods"}:
                 evidence.append(
                     await self._k8s.execute(
-                        json.dumps({"action": "get", "kind": "pod", "name": resource, "namespace": ns})
+                        json.dumps(
+                            {
+                                "action": "get",
+                                "kind": "pod",
+                                "name": resource,
+                                "namespace": ns,
+                            }
+                        )
                     )
                 )
                 evidence.append(
                     await self._k8s.execute(
-                        json.dumps({"action": "events", "name": resource, "namespace": ns})
+                        json.dumps(
+                            {"action": "events", "name": resource, "namespace": ns}
+                        )
                     )
                 )
                 evidence.append(
                     await self._k8s.execute(
-                        json.dumps({"action": "logs", "name": resource, "namespace": ns})
+                        json.dumps(
+                            {"action": "logs", "name": resource, "namespace": ns}
+                        )
                     )
                 )
             elif resource and kind in {"deployment", "deploy", "deployments"}:
@@ -97,7 +108,9 @@ class OpsDiagnosisService:
                 )
                 evidence.append(
                     await self._k8s.execute(
-                        json.dumps({"action": "events", "name": resource, "namespace": ns})
+                        json.dumps(
+                            {"action": "events", "name": resource, "namespace": ns}
+                        )
                     )
                 )
             else:
@@ -107,7 +120,9 @@ class OpsDiagnosisService:
                     )
                 )
                 evidence.append(
-                    await self._k8s.execute(json.dumps({"action": "events", "namespace": ns}))
+                    await self._k8s.execute(
+                        json.dumps({"action": "events", "namespace": ns})
+                    )
                 )
         except Exception as exc:  # noqa: BLE001
             logger.warning(f"evidence collection failed: {exc}")
@@ -126,9 +141,17 @@ class OpsDiagnosisService:
             "Check readiness/liveness probe failures and events",
             "Review pod logs for the failing container",
         ]
-        if alert.resource and (alert.resource_kind or "").lower() in {"deployment", "deploy", "deployments"}:
-            suggestions.append(f"Consider playbook: restart deploy {alert.resource} (requires approval)")
-            suggestions.append(f"Consider playbook: scale deploy {alert.resource} N (requires approval)")
+        if alert.resource and (alert.resource_kind or "").lower() in {
+            "deployment",
+            "deploy",
+            "deployments",
+        }:
+            suggestions.append(
+                f"Consider playbook: restart deploy {alert.resource} (requires approval)"
+            )
+            suggestions.append(
+                f"Consider playbook: scale deploy {alert.resource} N (requires approval)"
+            )
 
         if self._llm is None or not settings.OPS_USE_LLM_HYPOTHESIS:
             return (

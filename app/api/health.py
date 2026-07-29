@@ -27,7 +27,12 @@ async def ready(
     qdrant_client: QdrantClientWrapper = Depends(get_qdrant_client),
 ) -> dict[str, object]:
     """Readiness probe with dependency checks."""
-    checks: dict[str, object] = {"api": True, "redis": False, "qdrant": False, "postgres": True}
+    checks: dict[str, object] = {
+        "api": True,
+        "redis": False,
+        "qdrant": False,
+        "postgres": True,
+    }
     if settings.USE_POSTGRES:
         checks["postgres"] = False
     try:

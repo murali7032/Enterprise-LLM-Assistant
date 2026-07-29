@@ -19,7 +19,9 @@ def setup_logging() -> logging.Logger:
 logger = setup_logging()
 
 
-def log_with_context(logger_instance: logging.Logger, message: str, **context: Any) -> None:
+def log_with_context(
+    logger_instance: logging.Logger, message: str, **context: Any
+) -> None:
     """Log a message with optional structured context."""
     if context:
         context_str = " ".join(f"{key}={value}" for key, value in context.items())

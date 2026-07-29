@@ -21,7 +21,9 @@ class DocumentRepository(ABC):
         """Fetch document metadata by ID."""
 
     @abstractmethod
-    async def list_documents(self, collection: str | None = None) -> list[dict[str, Any]]:
+    async def list_documents(
+        self, collection: str | None = None
+    ) -> list[dict[str, Any]]:
         """List stored document metadata."""
 
     @abstractmethod

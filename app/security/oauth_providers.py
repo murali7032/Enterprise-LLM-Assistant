@@ -5,6 +5,7 @@ from __future__ import annotations
 import secrets
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+
 # from typing import Any
 from urllib.parse import urlencode
 
@@ -79,7 +80,9 @@ class GoogleOAuthProvider(OAuthProvider):
             tokens = token_response.json()
             access_token = tokens.get("access_token")
             if not access_token:
-                raise AppException("OAuth provider did not return an access token", status_code=400)
+                raise AppException(
+                    "OAuth provider did not return an access token", status_code=400
+                )
 
             userinfo_response = await client.get(
                 self.userinfo_endpoint,
@@ -115,11 +118,17 @@ class OAuthProviderRegistry:
         if provider is None:
             raise AppException(f"Unknown OAuth provider '{name}'", status_code=404)
         if not provider.is_configured():
-            raise AppException(f"OAuth provider '{name}' is not configured", status_code=503)
+            raise AppException(
+                f"OAuth provider '{name}' is not configured", status_code=503
+            )
         return provider
 
     def list_configured(self) -> list[str]:
-        return [name for name, provider in self._providers.items() if provider.is_configured()]
+        return [
+            name
+            for name, provider in self._providers.items()
+            if provider.is_configured()
+        ]
 
 
 def build_default_oauth_registry() -> OAuthProviderRegistry:

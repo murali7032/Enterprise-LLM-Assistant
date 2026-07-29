@@ -10,7 +10,9 @@ class InMemoryConversationMemory(ConversationMemoryStore):
         self._sessions: dict[str, list[dict[str, str]]] = {}
 
     async def append(self, session_id: str, role: str, content: str) -> None:
-        self._sessions.setdefault(session_id, []).append({"role": role, "content": content})
+        self._sessions.setdefault(session_id, []).append(
+            {"role": role, "content": content}
+        )
 
     async def get_history(
         self,

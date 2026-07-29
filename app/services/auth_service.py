@@ -96,7 +96,9 @@ class AuthService:
             raise AuthorizationException("Account is disabled")
 
         await self._lockout.clear_failures(email)
-        session_id = await self._create_session(user, ip_address=ip_address, user_agent=user_agent)
+        session_id = await self._create_session(
+            user, ip_address=ip_address, user_agent=user_agent
+        )
         await self._users.record_audit(
             "login_success",
             user_id=user["id"],
@@ -160,7 +162,9 @@ class AuthService:
         user = await self._users.set_email_verified(user_id)
         if user is None:
             raise AuthenticationException("User not found")
-        await self._users.record_audit("email_verified", user_id=user_id, email=user["email"])
+        await self._users.record_audit(
+            "email_verified", user_id=user_id, email=user["email"]
+        )
         return _sanitize_user(user)
 
     async def request_password_reset(self, email: str) -> str | None:
@@ -168,7 +172,9 @@ class AuthService:
         if user is None:
             return None
         token = await self._users.create_password_reset_token(user["id"])
-        await self._users.record_audit("password_reset_requested", user_id=user["id"], email=user["email"])
+        await self._users.record_audit(
+            "password_reset_requested", user_id=user["id"], email=user["email"]
+        )
         return token
 
     async def reset_password(self, token: str, new_password: str) -> None:
@@ -195,7 +201,9 @@ class AuthService:
         ip_address: str | None = None,
         user_agent: str | None = None,
     ) -> tuple[dict[str, Any], str]:
-        linked = await self._users.get_oauth_account(info.provider, info.provider_user_id)
+        linked = await self._users.get_oauth_account(
+            info.provider, info.provider_user_id
+        )
         if linked:
             user = await self._users.get_by_id(linked["user_id"])
             if user is None or not user.get("is_active", True):
@@ -221,7 +229,9 @@ class AuthService:
                 info.email,
             )
 
-        session_id = await self._create_session(user, ip_address=ip_address, user_agent=user_agent)
+        session_id = await self._create_session(
+            user, ip_address=ip_address, user_agent=user_agent
+        )
         await self._users.record_audit(
             "oauth_login",
             user_id=user["id"],

@@ -39,7 +39,9 @@ class PostgresConversationMemory(ConversationMemoryStore):
             .limit(message_limit)
         )
         records = list(reversed(result.scalars().all()))
-        messages = [{"role": record.role, "content": record.content} for record in records]
+        messages = [
+            {"role": record.role, "content": record.content} for record in records
+        ]
         return self._apply_limits(messages, limit, max_chars)
 
     async def clear(self, session_id: str) -> None:

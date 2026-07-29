@@ -3,7 +3,11 @@ from typing import Any
 from app.clients.embedding_client import EmbeddingClient
 from app.clients.qdrant_client import QdrantClientWrapper
 from app.core.exceptions import AppException
-from app.models.document import DocumentDeleteResponse, DocumentSearchRequest, DocumentSearchResponse
+from app.models.document import (
+    DocumentDeleteResponse,
+    DocumentSearchRequest,
+    DocumentSearchResponse,
+)
 from app.repositories.document_repository import DocumentRepository
 from app.retrieval.retriever import Retriever
 
@@ -43,7 +47,9 @@ class DocumentService:
 
     async def delete(self, document_id: str, collection: str) -> DocumentDeleteResponse:
         """Delete a document and all its vector chunks."""
-        chunks_deleted = await self._qdrant_client.delete_by_document_id(collection, document_id)
+        chunks_deleted = await self._qdrant_client.delete_by_document_id(
+            collection, document_id
+        )
         if chunks_deleted == 0:
             raise AppException(
                 message=f"Document '{document_id}' not found in collection '{collection}'",
@@ -69,7 +75,9 @@ class DocumentService:
             session_id=session_id,
             ephemeral_only=ephemeral_only,
         )
-        chunks_deleted = await self._qdrant_client.delete_by_session_id(collection, session_id)
+        chunks_deleted = await self._qdrant_client.delete_by_session_id(
+            collection, session_id
+        )
         return {
             "session_id": session_id,
             "collection": collection,

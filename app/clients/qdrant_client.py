@@ -26,7 +26,9 @@ class QdrantClientWrapper:
         if collection not in names:
             await self._client.create_collection(
                 collection_name=collection,
-                vectors_config=qmodels.VectorParams(size=vector_size, distance=qmodels.Distance.COSINE),
+                vectors_config=qmodels.VectorParams(
+                    size=vector_size, distance=qmodels.Distance.COSINE
+                ),
             )
 
     async def upsert(
@@ -40,7 +42,9 @@ class QdrantClientWrapper:
         point_ids = ids or [str(uuid4()) for _ in vectors]
         points = [
             qmodels.PointStruct(id=point_id, vector=vector, payload=payload)
-            for point_id, vector, payload in zip(point_ids, vectors, payloads, strict=True)
+            for point_id, vector, payload in zip(
+                point_ids, vectors, payloads, strict=True
+            )
         ]
         await self._client.upsert(collection_name=collection, points=points)
 
@@ -78,7 +82,11 @@ class QdrantClientWrapper:
     async def delete_by_document_id(self, collection: str, document_id: str) -> int:
         """Delete all vectors belonging to a document."""
         document_filter = qmodels.Filter(
-            must=[qmodels.FieldCondition(key="document_id", match=qmodels.MatchValue(value=document_id))]
+            must=[
+                qmodels.FieldCondition(
+                    key="document_id", match=qmodels.MatchValue(value=document_id)
+                )
+            ]
         )
         point_ids: list[str | int] = []
         offset = None

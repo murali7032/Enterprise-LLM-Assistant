@@ -23,7 +23,9 @@ class FindingStore:
                 existing = self._by_id[existing_id]
                 existing.evidence = finding.evidence or existing.evidence
                 existing.hypotheses = finding.hypotheses or existing.hypotheses
-                existing.suggested_actions = finding.suggested_actions or existing.suggested_actions
+                existing.suggested_actions = (
+                    finding.suggested_actions or existing.suggested_actions
+                )
                 existing.severity = finding.severity
                 existing.status = finding.status
                 existing.metadata = {**existing.metadata, **finding.metadata}
@@ -38,7 +40,9 @@ class FindingStore:
 
     def list(self, limit: int = 50) -> list[OpsFinding]:
         with self._lock:
-            items = sorted(self._by_id.values(), key=lambda f: f.created_at, reverse=True)
+            items = sorted(
+                self._by_id.values(), key=lambda f: f.created_at, reverse=True
+            )
             return items[:limit]
 
     def mark_notified(self, finding_id: str) -> None:

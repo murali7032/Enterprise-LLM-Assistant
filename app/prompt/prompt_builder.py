@@ -1,4 +1,3 @@
-
 from app.core.config import settings
 from app.models.document import DocumentChunk
 
@@ -21,7 +20,8 @@ class PromptBuilder:
 
         if history:
             history_text = "\n".join(
-                f"{message['role'].title()}: {message['content']}" for message in history
+                f"{message['role'].title()}: {message['content']}"
+                for message in history
             )
             sections.extend(["Conversation History:", history_text])
 
@@ -35,7 +35,9 @@ class PromptBuilder:
         sections.extend([f"Question:\n{question}", "Answer:"])
         return "\n\n".join(sections)
 
-    def build_agent_prompt(self, goal: str, observations: list[str], tools: list[str]) -> str:
+    def build_agent_prompt(
+        self, goal: str, observations: list[str], tools: list[str]
+    ) -> str:
         """Build an agent planning prompt."""
         history = "\n".join(f"- {item}" for item in observations) or "- None"
         tool_list = ", ".join(tools)

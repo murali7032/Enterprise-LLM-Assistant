@@ -26,7 +26,9 @@ class DocumentExtractor(ABC):
 
     async def extract_url(self, url: str) -> ExtractedContent:
         """Extract text from a remote URL (optional per extractor)."""
-        raise NotImplementedError(f"{self.source_type} URL extraction is not implemented")
+        raise NotImplementedError(
+            f"{self.source_type} URL extraction is not implemented"
+        )
 
     def supports_filename(self, filename: str) -> bool:
         extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""

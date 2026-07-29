@@ -12,7 +12,9 @@ from app.repositories.document_repository import DocumentRepository
 class RecursiveTextSplitter:
     """Split text recursively using configurable chunk size and overlap."""
 
-    def __init__(self, chunk_size: int | None = None, chunk_overlap: int | None = None) -> None:
+    def __init__(
+        self, chunk_size: int | None = None, chunk_overlap: int | None = None
+    ) -> None:
         self._chunk_size = chunk_size or settings.CHUNK_SIZE
         self._chunk_overlap = chunk_overlap or settings.CHUNK_OVERLAP
 
@@ -46,7 +48,9 @@ class IngestionService:
         self._embedding_client = embedding_client
         self._qdrant_client = qdrant_client
         self._document_repository = document_repository
-        self._extraction_registry = extraction_registry or get_default_extraction_registry()
+        self._extraction_registry = (
+            extraction_registry or get_default_extraction_registry()
+        )
         self._splitter = splitter or RecursiveTextSplitter()
 
     async def ingest(
@@ -122,7 +126,9 @@ class IngestionService:
             raise AppException("No extractable text found in document", status_code=422)
 
         embeddings = await self._embedding_client.embed(chunks)
-        await self._qdrant_client.ensure_collection(collection, settings.EMBEDDING_DIMENSION)
+        await self._qdrant_client.ensure_collection(
+            collection, settings.EMBEDDING_DIMENSION
+        )
 
         document_id = str(uuid4())
         payloads = [
@@ -135,7 +141,9 @@ class IngestionService:
             }
             for index, chunk in enumerate(chunks)
         ]
-        await self._qdrant_client.upsert(collection=collection, vectors=embeddings, payloads=payloads)
+        await self._qdrant_client.upsert(
+            collection=collection, vectors=embeddings, payloads=payloads
+        )
         await self._document_repository.save_document(
             document_id=document_id,
             filename=filename,

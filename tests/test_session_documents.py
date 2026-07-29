@@ -32,7 +32,9 @@ async def test_delete_session_documents_ephemeral_only() -> None:
         document_repository=repo,
     )
 
-    result = await service.delete_session_documents("s1", "documents", ephemeral_only=True)
+    result = await service.delete_session_documents(
+        "s1", "documents", ephemeral_only=True
+    )
 
     assert result["documents_deleted"] == 1
     assert result["document_ids"] == ["doc-1"]

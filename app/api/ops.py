@@ -21,7 +21,10 @@ def _normalize_alertmanager(body: AlertmanagerWebhook) -> list[AlertPayload]:
     alerts: list[AlertPayload] = []
     for raw in body.alerts:
         labels = {**(body.commonLabels or {}), **(raw.get("labels") or {})}
-        annotations = {**(body.commonAnnotations or {}), **(raw.get("annotations") or {})}
+        annotations = {
+            **(body.commonAnnotations or {}),
+            **(raw.get("annotations") or {}),
+        }
         alerts.append(
             AlertPayload(
                 alertname=str(labels.get("alertname") or "UnknownAlert"),
@@ -29,11 +32,17 @@ def _normalize_alertmanager(body: AlertmanagerWebhook) -> list[AlertPayload]:
                 summary=str(annotations.get("summary") or ""),
                 description=str(annotations.get("description") or ""),
                 namespace=labels.get("namespace"),
-                resource=labels.get("pod") or labels.get("deployment") or labels.get("resource"),
+                resource=labels.get("pod")
+                or labels.get("deployment")
+                or labels.get("resource"),
                 resource_kind=(
                     "pod"
                     if labels.get("pod")
-                    else ("deployment" if labels.get("deployment") else labels.get("resource_kind"))
+                    else (
+                        "deployment"
+                        if labels.get("deployment")
+                        else labels.get("resource_kind")
+                    )
                 ),
                 labels={str(k): str(v) for k, v in labels.items()},
                 annotations={str(k): str(v) for k, v in annotations.items()},
@@ -60,7 +69,9 @@ async def ingest_alerts(
     elif isinstance(payload, dict) and "alertname" in payload:
         alerts = [AlertPayload.model_validate(payload)]
     else:
-        raise AppException("Expected Alertmanager webhook or AlertPayload JSON", status_code=400)
+        raise AppException(
+            "Expected Alertmanager webhook or AlertPayload JSON", status_code=400
+        )
 
     results: list[DiagnoseResponse] = []
     for alert in alerts:

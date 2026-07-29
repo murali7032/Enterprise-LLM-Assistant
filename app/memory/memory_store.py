@@ -28,7 +28,9 @@ class ConversationMemoryStore(ABC):
     async def summary(self, session_id: str) -> dict[str, Any]:
         """Return session summary metadata."""
 
-    def _trim_by_chars(self, messages: list[dict[str, str]], max_chars: int) -> list[dict[str, str]]:
+    def _trim_by_chars(
+        self, messages: list[dict[str, str]], max_chars: int
+    ) -> list[dict[str, str]]:
         """Keep the most recent messages that fit within a character budget."""
         selected: list[dict[str, str]] = []
         total_chars = 0

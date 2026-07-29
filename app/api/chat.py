@@ -4,7 +4,11 @@ from collections.abc import AsyncIterator
 from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import StreamingResponse
 
-from app.dependencies import get_chat_service, get_document_service, get_ingestion_service
+from app.dependencies import (
+    get_chat_service,
+    get_document_service,
+    get_ingestion_service,
+)
 from app.middleware.auth import require_auth_permission
 from app.models.chat_request import ChatRequest, ChatUploadUrlRequest
 from app.models.chat_response import ChatResponse
@@ -47,7 +51,10 @@ async def chat_upload(
     return DocumentIngestResponse(**result)
 
 
-@router.delete("/chat/session/{session_id}/documents", response_model=SessionDocumentsDeleteResponse)
+@router.delete(
+    "/chat/session/{session_id}/documents",
+    response_model=SessionDocumentsDeleteResponse,
+)
 async def delete_chat_session_documents(
     session_id: str,
     collection: str = "documents",

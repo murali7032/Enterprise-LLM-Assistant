@@ -38,7 +38,9 @@ class KubernetesClient:
             elif self._mode == "kubeconfig":
                 config.load_kube_config(config_file=settings.KUBECONFIG_PATH or None)
             else:
-                raise AppException(f"Unknown K8S_AUTH_MODE '{self._mode}'", status_code=500)
+                raise AppException(
+                    f"Unknown K8S_AUTH_MODE '{self._mode}'", status_code=500
+                )
             self._core = client.CoreV1Api()
             self._apps = client.AppsV1Api()
             self._ready = True
@@ -87,7 +89,9 @@ class KubernetesClient:
             ],
         }
 
-    async def list_pods(self, namespace: str | None = None, label_selector: str | None = None) -> dict[str, Any]:
+    async def list_pods(
+        self, namespace: str | None = None, label_selector: str | None = None
+    ) -> dict[str, Any]:
         ns = namespace or settings.K8S_DEFAULT_NAMESPACE
         if self._mode == "mock" or self._core is None:
             return {
@@ -96,7 +100,9 @@ class KubernetesClient:
                 "items": [self._mock_resource("Pod", "demo-pod-0", ns)],
                 "mock": True,
             }
-        pods = self._core.list_namespaced_pod(namespace=ns, label_selector=label_selector or None)
+        pods = self._core.list_namespaced_pod(
+            namespace=ns, label_selector=label_selector or None
+        )
         return {
             "kind": "PodList",
             "namespace": ns,
@@ -104,13 +110,18 @@ class KubernetesClient:
                 {
                     "name": p.metadata.name,
                     "phase": p.status.phase,
-                    "restarts": sum((c.restart_count or 0) for c in (p.status.container_statuses or [])),
+                    "restarts": sum(
+                        (c.restart_count or 0)
+                        for c in (p.status.container_statuses or [])
+                    ),
                 }
                 for p in pods.items
             ],
         }
 
-    async def get_deployment(self, name: str, namespace: str | None = None) -> dict[str, Any]:
+    async def get_deployment(
+        self, name: str, namespace: str | None = None
+    ) -> dict[str, Any]:
         ns = namespace or settings.K8S_DEFAULT_NAMESPACE
         if self._mode == "mock" or self._apps is None:
             return self._mock_resource("Deployment", name, ns)
@@ -123,12 +134,19 @@ class KubernetesClient:
             "ready_replicas": dep.status.ready_replicas,
             "available_replicas": dep.status.available_replicas,
             "conditions": [
-                {"type": c.type, "status": c.status, "reason": c.reason, "message": c.message}
+                {
+                    "type": c.type,
+                    "status": c.status,
+                    "reason": c.reason,
+                    "message": c.message,
+                }
                 for c in (dep.status.conditions or [])
             ],
         }
 
-    async def list_events(self, namespace: str | None = None, involved_name: str | None = None) -> dict[str, Any]:
+    async def list_events(
+        self, namespace: str | None = None, involved_name: str | None = None
+    ) -> dict[str, Any]:
         ns = namespace or settings.K8S_DEFAULT_NAMESPACE
         if self._mode == "mock" or self._core is None:
             return {
@@ -144,9 +162,19 @@ class KubernetesClient:
                 ],
                 "mock": True,
             }
-        field_selector = f"involvedObject.name={involved_name}" if involved_name else None
-        events = self._core.list_namespaced_event(namespace=ns, field_selector=field_selector)
-        items = sorted(events.items, key=lambda e: e.last_timestamp or e.event_time or e.metadata.creation_timestamp, reverse=True)
+        field_selector = (
+            f"involvedObject.name={involved_name}" if involved_name else None
+        )
+        events = self._core.list_namespaced_event(
+            namespace=ns, field_selector=field_selector
+        )
+        items = sorted(
+            events.items,
+            key=lambda e: e.last_timestamp
+            or e.event_time
+            or e.metadata.creation_timestamp,
+            reverse=True,
+        )
         return {
             "kind": "EventList",
             "namespace": ns,
@@ -163,7 +191,9 @@ class KubernetesClient:
             ],
         }
 
-    async def get_pod_logs(self, name: str, namespace: str | None = None, tail_lines: int = 100) -> dict[str, Any]:
+    async def get_pod_logs(
+        self, name: str, namespace: str | None = None, tail_lines: int = 100
+    ) -> dict[str, Any]:
         ns = namespace or settings.K8S_DEFAULT_NAMESPACE
         if self._mode == "mock" or self._core is None:
             return {
@@ -173,10 +203,14 @@ class KubernetesClient:
                 "logs": f"[mock] sample log lines for {name}\nERROR connection refused\n",
                 "mock": True,
             }
-        logs = self._core.read_namespaced_pod_log(name=name, namespace=ns, tail_lines=tail_lines)
+        logs = self._core.read_namespaced_pod_log(
+            name=name, namespace=ns, tail_lines=tail_lines
+        )
         return {"kind": "PodLog", "name": name, "namespace": ns, "logs": logs}
 
-    async def restart_deployment(self, name: str, namespace: str | None = None) -> dict[str, Any]:
+    async def restart_deployment(
+        self, name: str, namespace: str | None = None
+    ) -> dict[str, Any]:
         """Mutating: trigger a rolling restart via annotation patch."""
         ns = namespace or settings.K8S_DEFAULT_NAMESPACE
         if self._mode == "mock" or self._apps is None:
@@ -194,16 +228,25 @@ class KubernetesClient:
                 "template": {
                     "metadata": {
                         "annotations": {
-                            "ops.enterprise-llm/restartedAt": datetime.now(UTC).isoformat(),
+                            "ops.enterprise-llm/restartedAt": datetime.now(
+                                UTC
+                            ).isoformat(),
                         }
                     }
                 }
             }
         }
         self._apps.patch_namespaced_deployment(name=name, namespace=ns, body=body)
-        return {"kind": "DeploymentRestart", "name": name, "namespace": ns, "status": "restarted"}
+        return {
+            "kind": "DeploymentRestart",
+            "name": name,
+            "namespace": ns,
+            "status": "restarted",
+        }
 
-    async def scale_deployment(self, name: str, replicas: int, namespace: str | None = None) -> dict[str, Any]:
+    async def scale_deployment(
+        self, name: str, replicas: int, namespace: str | None = None
+    ) -> dict[str, Any]:
         """Mutating: scale a deployment."""
         ns = namespace or settings.K8S_DEFAULT_NAMESPACE
         if replicas < 0 or replicas > settings.K8S_MAX_SCALE_REPLICAS:
@@ -291,10 +334,18 @@ def parse_k8s_query(query: str) -> dict[str, Any]:
     kind = kind_aliases.get(kind, kind)
 
     if action == "events":
-        involved = rest[0] if rest and rest[0].lower() not in kind_aliases else (rest[1] if len(rest) > 1 else None)
+        involved = (
+            rest[0]
+            if rest and rest[0].lower() not in kind_aliases
+            else (rest[1] if len(rest) > 1 else None)
+        )
         return {"action": "events", "kind": "events", "name": involved}
     if action == "logs":
-        name = rest[1] if len(rest) > 1 and rest[0].lower() in {"pod", "pods"} else (rest[0] if rest else None)
+        name = (
+            rest[1]
+            if len(rest) > 1 and rest[0].lower() in {"pod", "pods"}
+            else (rest[0] if rest else None)
+        )
         return {"action": "logs", "kind": "logs", "name": name}
     if action == "list":
         return {"action": "list", "kind": kind if kind.endswith("s") else f"{kind}s"}
@@ -306,7 +357,12 @@ def parse_k8s_query(query: str) -> dict[str, Any]:
         else:
             name = rest[0] if rest else None
             replicas = int(rest[1]) if len(rest) > 1 else None
-        return {"action": "scale", "kind": "deployment", "name": name, "replicas": replicas}
+        return {
+            "action": "scale",
+            "kind": "deployment",
+            "name": name,
+            "replicas": replicas,
+        }
     if action == "restart":
         if rest and rest[0].lower() in {"deploy", "deployment"}:
             name = rest[1] if len(rest) > 1 else None

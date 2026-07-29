@@ -28,7 +28,9 @@ class InMemoryDocumentRepository(DocumentRepository):
     async def get_document(self, document_id: str) -> dict[str, Any] | None:
         return self._documents.get(document_id)
 
-    async def list_documents(self, collection: str | None = None) -> list[dict[str, Any]]:
+    async def list_documents(
+        self, collection: str | None = None
+    ) -> list[dict[str, Any]]:
         documents = list(self._documents.values())
         if collection:
             return [doc for doc in documents if doc["collection"] == collection]
@@ -58,7 +60,9 @@ class InMemoryDocumentRepository(DocumentRepository):
         session_id: str,
         ephemeral_only: bool = True,
     ) -> list[str]:
-        to_delete = await self.list_documents_by_session(session_id, ephemeral_only=ephemeral_only)
+        to_delete = await self.list_documents_by_session(
+            session_id, ephemeral_only=ephemeral_only
+        )
         deleted_ids: list[str] = []
         for doc in to_delete:
             if await self.delete_document(doc["document_id"]):

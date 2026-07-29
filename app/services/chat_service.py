@@ -38,17 +38,24 @@ class ChatService:
     def _detect_intent(self, question: str) -> str:
         """Simple intent detection for routing."""
         lowered = question.lower()
-        if any(keyword in lowered for keyword in ("search", "document", "policy", "knowledge")):
+        if any(
+            keyword in lowered
+            for keyword in ("search", "document", "policy", "knowledge")
+        ):
             return "rag"
         return "chat"
 
-    async def _get_history(self, session_id: str, use_memory: bool) -> list[dict[str, str]]:
+    async def _get_history(
+        self, session_id: str, use_memory: bool
+    ) -> list[dict[str, str]]:
         """Load conversation history when memory is enabled."""
         if not use_memory or not settings.MEMORY_ENABLED:
             return []
         return await self._memory.get_history(session_id)
 
-    async def _retrieve_context(self, request: ChatRequest, use_rag: bool) -> list[DocumentChunk]:
+    async def _retrieve_context(
+        self, request: ChatRequest, use_rag: bool
+    ) -> list[DocumentChunk]:
         """Retrieve RAG context chunks when enabled."""
         if not use_rag or self._retriever is None or self._embedding_client is None:
             return []
@@ -77,7 +84,9 @@ class ChatService:
         )
         return prompt, context_chunks
 
-    async def _save_exchange(self, session_id: str, question: str, answer: str, use_memory: bool) -> None:
+    async def _save_exchange(
+        self, session_id: str, question: str, answer: str, use_memory: bool
+    ) -> None:
         """Persist the user and assistant messages for a session."""
         if not use_memory or not settings.MEMORY_ENABLED:
             return
@@ -98,7 +107,9 @@ class ChatService:
         result = await self._llm_service.generate(prompt)
         answer = self._output_parser.parse_text(result.content)
 
-        await self._save_exchange(session_id, request.question, answer, request.use_memory)
+        await self._save_exchange(
+            session_id, request.question, answer, request.use_memory
+        )
 
         return ChatResponse(
             answer=answer,
@@ -128,7 +139,9 @@ class ChatService:
             yield chunk
 
         answer = "".join(chunks)
-        await self._save_exchange(session_id, request.question, answer, request.use_memory)
+        await self._save_exchange(
+            session_id, request.question, answer, request.use_memory
+        )
 
     async def stream_events(self, request: ChatRequest) -> AsyncIterator[dict]:
         """Stream chat tokens plus RAG source metadata for the client UI."""
@@ -147,7 +160,9 @@ class ChatService:
             yield {"type": "token", "content": chunk}
 
         answer = "".join(chunks)
-        await self._save_exchange(session_id, request.question, answer, request.use_memory)
+        await self._save_exchange(
+            session_id, request.question, answer, request.use_memory
+        )
         yield {
             "type": "sources",
             "session_id": session_id,

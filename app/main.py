@@ -29,7 +29,9 @@ async def lifespan(_: FastAPI):
     await close_db()
 
 
-app = FastAPI(title=settings.APP_NAME, version="1.0.0", debug=settings.DEBUG, lifespan=lifespan)
+app = FastAPI(
+    title=settings.APP_NAME, version="1.0.0", debug=settings.DEBUG, lifespan=lifespan
+)
 
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(RateLimitMiddleware)
@@ -46,11 +48,15 @@ if settings.METRICS_ENABLED:
 
 chat_ui_dir = Path(__file__).resolve().parent.parent / "static" / "chat"
 if chat_ui_dir.exists():
-    app.mount("/chat", NoCacheStaticFiles(directory=chat_ui_dir, html=True), name="chat-ui")
+    app.mount(
+        "/chat", NoCacheStaticFiles(directory=chat_ui_dir, html=True), name="chat-ui"
+    )
 
 auth_ui_dir = Path(__file__).resolve().parent.parent / "static" / "auth"
 if auth_ui_dir.exists():
-    app.mount("/auth", NoCacheStaticFiles(directory=auth_ui_dir, html=True), name="auth-ui")
+    app.mount(
+        "/auth", NoCacheStaticFiles(directory=auth_ui_dir, html=True), name="auth-ui"
+    )
 
 
 @app.get("/")

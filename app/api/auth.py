@@ -6,11 +6,21 @@ from pydantic import BaseModel, Field
 
 from app.core.config import settings
 from app.core.exceptions import AppException, AuthenticationException
-from app.dependencies import get_auth_rate_limiter, get_auth_service, get_oauth_registry, get_session_store
+from app.dependencies import (
+    get_auth_rate_limiter,
+    get_auth_service,
+    get_oauth_registry,
+    get_session_store,
+)
 from app.middleware.auth import get_current_user
 from app.security.auth_limits import AuthRateLimiter
 from app.security.authentication import create_access_token
-from app.security.cookies import clear_csrf_cookie, clear_session_cookie, set_csrf_cookie, set_session_cookie
+from app.security.cookies import (
+    clear_csrf_cookie,
+    clear_session_cookie,
+    set_csrf_cookie,
+    set_session_cookie,
+)
 from app.security.csrf import validate_csrf
 from app.security.oauth_providers import (
     OAuthProviderRegistry,
@@ -81,7 +91,10 @@ async def register(
         ip_address=ip,
         user_agent=ua,
     )
-    payload: dict[str, Any] = {"user": user, "message": "Registration successful. Verify your email."}
+    payload: dict[str, Any] = {
+        "user": user,
+        "message": "Registration successful. Verify your email.",
+    }
     if settings.DEBUG or settings.AUTH_DEV_TOKEN_ENABLED:
         payload["verification_token"] = verify_token
     set_csrf_cookie(response)
@@ -189,7 +202,9 @@ async def forgot_password(
     ip, _ = _client_meta(request)
     await rate_limiter.check(f"forgot:{ip or 'unknown'}")
     token = await auth_service.request_password_reset(_normalize_email(body.email))
-    payload: dict[str, Any] = {"message": "If that email exists, a reset link was issued."}
+    payload: dict[str, Any] = {
+        "message": "If that email exists, a reset link was issued."
+    }
     if token and (settings.DEBUG or settings.AUTH_DEV_TOKEN_ENABLED):
         payload["reset_token"] = token
     return payload
@@ -225,7 +240,9 @@ async def oauth_start(
     oauth_provider = oauth_registry.get(provider)
     state = new_oauth_state()
     redirect_uri = provider_redirect_uri(provider)
-    await sessions.set_oauth_state(state, {"provider": provider, "redirect_uri": redirect_uri})
+    await sessions.set_oauth_state(
+        state, {"provider": provider, "redirect_uri": redirect_uri}
+    )
     return RedirectResponse(url=oauth_provider.build_authorize_url(state, redirect_uri))
 
 
@@ -254,7 +271,9 @@ async def oauth_callback(
     redirect_uri = stored.get("redirect_uri") or provider_redirect_uri(provider)
     info = await oauth_provider.exchange_code(code, redirect_uri)
     ip, ua = _client_meta(request)
-    _, session_id = await auth_service.login_with_oauth(info, ip_address=ip, user_agent=ua)
+    _, session_id = await auth_service.login_with_oauth(
+        info, ip_address=ip, user_agent=ua
+    )
 
     redirect = RedirectResponse(url="/chat/", status_code=303)
     set_session_cookie(redirect, session_id)
@@ -263,7 +282,9 @@ async def oauth_callback(
 
 
 @router.post("/token")
-async def create_token(subject: str = "demo-user", role: str = "admin") -> dict[str, str]:
+async def create_token(
+    subject: str = "demo-user", role: str = "admin"
+) -> dict[str, str]:
     """Issue a development JWT access token (disabled unless AUTH_DEV_TOKEN_ENABLED)."""
     if not settings.AUTH_DEV_TOKEN_ENABLED and not settings.DEBUG:
         raise AppException("Dev token endpoint is disabled", status_code=404)

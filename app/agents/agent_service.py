@@ -89,7 +89,10 @@ class AgentService:
                     data = json.loads(step.observation.replace("'", '"'))
                 except json.JSONDecodeError:
                     data = {}
-                if isinstance(data, dict) and data.get("status") == PENDING_APPROVAL_MARKER:
+                if (
+                    isinstance(data, dict)
+                    and data.get("status") == PENDING_APPROVAL_MARKER
+                ):
                     approval = PendingApproval(
                         tool="k8s_playbook",
                         action=str(data.get("proposed_action") or "unknown"),
@@ -130,7 +133,9 @@ class AgentService:
         tool = self._tool_router._tools.get("k8s_playbook")  # noqa: SLF001
         if not isinstance(tool, K8sPlaybookTool):
             # Still try execute via router
-            result = await self._tool_router.execute("k8s_playbook", json.dumps(payload))
+            result = await self._tool_router.execute(
+                "k8s_playbook", json.dumps(payload)
+            )
             return {"status": "executed", "approval_id": approval_id, "result": result}
         result = await tool.execute(json.dumps(payload))
         return {"status": "executed", "approval_id": approval_id, "result": result}
@@ -152,7 +157,11 @@ class AgentService:
         # Match against previously approved pending items listed by the client
         for approval_id in approved_ids:
             pending_item = self._approvals.get(approval_id)
-            if pending_item and pending_item.action == action and pending_item.args == args:
+            if (
+                pending_item
+                and pending_item.action == action
+                and pending_item.args == args
+            ):
                 self._approvals.approve(approval_id)
                 payload = {"action": action, "approved": True, **args}
                 return json.dumps(payload), None

@@ -41,7 +41,9 @@ class K8sPlaybookTool(Tool):
                 "status": PENDING_APPROVAL_MARKER,
                 "tool": self.name,
                 "proposed_action": payload.get("action"),
-                "args": {k: v for k, v in payload.items() if k not in {"approved", "action"}},
+                "args": {
+                    k: v for k, v in payload.items() if k not in {"approved", "action"}
+                },
                 "message": "Mutating action requires explicit user approval",
             }
 
@@ -57,7 +59,9 @@ class K8sPlaybookTool(Tool):
             replicas = payload.get("replicas")
             if replicas is None:
                 raise AppException("scale requires replicas", status_code=400)
-            return await self._client.scale_deployment(str(name), int(replicas), namespace=namespace)
+            return await self._client.scale_deployment(
+                str(name), int(replicas), namespace=namespace
+            )
 
         raise AppException(
             f"Unknown playbook action '{action}'. Allowed: restart, scale",

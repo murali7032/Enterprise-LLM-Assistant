@@ -61,11 +61,15 @@ class UserRepository(ABC):
         """Attach an OAuth identity to a user."""
 
     @abstractmethod
-    async def get_oauth_account(self, provider: str, provider_user_id: str) -> dict[str, Any] | None:
+    async def get_oauth_account(
+        self, provider: str, provider_user_id: str
+    ) -> dict[str, Any] | None:
         """Lookup OAuth link."""
 
     @abstractmethod
-    async def create_email_verification_token(self, user_id: str, ttl_hours: int = 24) -> str:
+    async def create_email_verification_token(
+        self, user_id: str, ttl_hours: int = 24
+    ) -> str:
         """Issue email verification token."""
 
     @abstractmethod
@@ -73,7 +77,9 @@ class UserRepository(ABC):
         """Mark verification token used; return user_id if valid."""
 
     @abstractmethod
-    async def create_password_reset_token(self, user_id: str, ttl_hours: int = 1) -> str:
+    async def create_password_reset_token(
+        self, user_id: str, ttl_hours: int = 1
+    ) -> str:
         """Issue password reset token."""
 
     @abstractmethod
@@ -178,10 +184,14 @@ class InMemoryUserRepository(UserRepository):
             "email": email,
         }
 
-    async def get_oauth_account(self, provider: str, provider_user_id: str) -> dict[str, Any] | None:
+    async def get_oauth_account(
+        self, provider: str, provider_user_id: str
+    ) -> dict[str, Any] | None:
         return self._oauth.get((provider, provider_user_id))
 
-    async def create_email_verification_token(self, user_id: str, ttl_hours: int = 24) -> str:
+    async def create_email_verification_token(
+        self, user_id: str, ttl_hours: int = 24
+    ) -> str:
         token = uuid4().hex
         self._verify_tokens[token] = {
             "user_id": user_id,
@@ -197,7 +207,9 @@ class InMemoryUserRepository(UserRepository):
         data["used"] = True
         return data["user_id"]
 
-    async def create_password_reset_token(self, user_id: str, ttl_hours: int = 1) -> str:
+    async def create_password_reset_token(
+        self, user_id: str, ttl_hours: int = 1
+    ) -> str:
         token = uuid4().hex
         self._reset_tokens[token] = {
             "user_id": user_id,
@@ -286,12 +298,16 @@ class PostgresUserRepository(UserRepository):
         return self._to_dict(user) if user else None
 
     async def get_by_id(self, user_id: str) -> dict[str, Any] | None:
-        result = await self._session.execute(select(UserRecord).where(UserRecord.id == user_id))
+        result = await self._session.execute(
+            select(UserRecord).where(UserRecord.id == user_id)
+        )
         user = result.scalar_one_or_none()
         return self._to_dict(user) if user else None
 
     async def set_email_verified(self, user_id: str) -> dict[str, Any] | None:
-        result = await self._session.execute(select(UserRecord).where(UserRecord.id == user_id))
+        result = await self._session.execute(
+            select(UserRecord).where(UserRecord.id == user_id)
+        )
         user = result.scalar_one_or_none()
         if not user:
             return None
@@ -302,7 +318,9 @@ class PostgresUserRepository(UserRepository):
         return self._to_dict(user)
 
     async def set_password(self, user_id: str, password: str) -> None:
-        result = await self._session.execute(select(UserRecord).where(UserRecord.id == user_id))
+        result = await self._session.execute(
+            select(UserRecord).where(UserRecord.id == user_id)
+        )
         user = result.scalar_one_or_none()
         if not user:
             return
@@ -331,7 +349,9 @@ class PostgresUserRepository(UserRepository):
         )
         await self._session.commit()
 
-    async def get_oauth_account(self, provider: str, provider_user_id: str) -> dict[str, Any] | None:
+    async def get_oauth_account(
+        self, provider: str, provider_user_id: str
+    ) -> dict[str, Any] | None:
         result = await self._session.execute(
             select(OAuthAccountRecord).where(
                 OAuthAccountRecord.provider == provider,
@@ -348,7 +368,9 @@ class PostgresUserRepository(UserRepository):
             "email": account.email,
         }
 
-    async def create_email_verification_token(self, user_id: str, ttl_hours: int = 24) -> str:
+    async def create_email_verification_token(
+        self, user_id: str, ttl_hours: int = 24
+    ) -> str:
         token = uuid4().hex
         self._session.add(
             EmailVerificationTokenRecord(
@@ -362,7 +384,9 @@ class PostgresUserRepository(UserRepository):
 
     async def consume_email_verification_token(self, token: str) -> str | None:
         result = await self._session.execute(
-            select(EmailVerificationTokenRecord).where(EmailVerificationTokenRecord.token == token)
+            select(EmailVerificationTokenRecord).where(
+                EmailVerificationTokenRecord.token == token
+            )
         )
         row = result.scalar_one_or_none()
         if not row or row.used_at is not None or row.expires_at < datetime.now(UTC):
@@ -371,7 +395,9 @@ class PostgresUserRepository(UserRepository):
         await self._session.commit()
         return row.user_id
 
-    async def create_password_reset_token(self, user_id: str, ttl_hours: int = 1) -> str:
+    async def create_password_reset_token(
+        self, user_id: str, ttl_hours: int = 1
+    ) -> str:
         token = uuid4().hex
         self._session.add(
             PasswordResetTokenRecord(
@@ -385,7 +411,9 @@ class PostgresUserRepository(UserRepository):
 
     async def consume_password_reset_token(self, token: str) -> str | None:
         result = await self._session.execute(
-            select(PasswordResetTokenRecord).where(PasswordResetTokenRecord.token == token)
+            select(PasswordResetTokenRecord).where(
+                PasswordResetTokenRecord.token == token
+            )
         )
         row = result.scalar_one_or_none()
         if not row or row.used_at is not None or row.expires_at < datetime.now(UTC):

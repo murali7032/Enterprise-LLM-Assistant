@@ -53,7 +53,9 @@ class CircuitBreaker:
         failure_threshold: int | None = None,
         reset_timeout: float | None = None,
     ) -> None:
-        self._failure_threshold = failure_threshold or settings.CIRCUIT_BREAKER_FAILURE_THRESHOLD
+        self._failure_threshold = (
+            failure_threshold or settings.CIRCUIT_BREAKER_FAILURE_THRESHOLD
+        )
         self._reset_timeout = reset_timeout or settings.CIRCUIT_BREAKER_RESET_TIMEOUT
         self._failure_count = 0
         self._opened_at: float | None = None

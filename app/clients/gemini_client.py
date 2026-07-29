@@ -34,7 +34,9 @@ class GeminiClient:
             "content": response.text or "",
             "model": model,
             "prompt_tokens": getattr(usage, "prompt_token_count", 0) if usage else 0,
-            "completion_tokens": getattr(usage, "candidates_token_count", 0) if usage else 0,
+            "completion_tokens": (
+                getattr(usage, "candidates_token_count", 0) if usage else 0
+            ),
             "total_tokens": getattr(usage, "total_token_count", 0) if usage else 0,
         }
 

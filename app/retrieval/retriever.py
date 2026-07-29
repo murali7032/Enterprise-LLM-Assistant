@@ -33,7 +33,9 @@ class Reranker:
     def __init__(self, hybrid_search: HybridSearch) -> None:
         self._hybrid_search = hybrid_search
 
-    def rerank(self, query: str, hits: list[dict[str, Any]], top_n: int | None = None) -> list[DocumentChunk]:
+    def rerank(
+        self, query: str, hits: list[dict[str, Any]], top_n: int | None = None
+    ) -> list[DocumentChunk]:
         """Rerank and convert hits into document chunks."""
         limit = top_n or settings.TOP_N
         ranked_hits = self._hybrid_search.rank(query, hits)[:limit]
